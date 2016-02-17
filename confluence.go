@@ -53,7 +53,7 @@ func (c *Confluence) GetSpaces() ([]*Space, error) {
 		return spaces, nil
 	}
 
-	_, body, errs := c.client.Get(c.BaseURL+"/space").
+	_, res, errs := c.client.Get(c.BaseURL+"/space").
 		Set("Accept", "application/json, */*").
 		Query("expand=description.view").
 		SetBasicAuth(c.Username, c.Password).
@@ -63,11 +63,11 @@ func (c *Confluence) GetSpaces() ([]*Space, error) {
 		return nil, errs[0]
 	}
 
-	if len(body) == 0 {
+	if len(res) == 0 {
 		return nil, fmt.Errorf("zero response")
 	}
 
-	json, err := gabs.ParseJSON([]byte(body))
+	json, err := gabs.ParseJSON([]byte(res))
 	if err != nil {
 		return nil, err
 	}
@@ -115,13 +115,13 @@ func (c *Confluence) GetSpace(key string) (*Space, error) {
 	return nil, fmt.Errorf("space not found")
 }
 
-func (c *Confluence) GetPage(id string) (*Page, error) {
+func (c *Confluence) GetPageById(id string) (*Page, error) {
 	if value, ok := c.cache.Get("page-" + id); ok {
 		page, _ := value.(*Page)
 		return page, nil
 	}
 
-	_, body, errs := c.client.Get(c.BaseURL+"/content/"+id).
+	_, res, errs := c.client.Get(c.BaseURL+"/content/"+id).
 		Set("Accept", "application/json, */*").
 		Query("expand=body.view").
 		SetBasicAuth(c.Username, c.Password).
@@ -131,11 +131,11 @@ func (c *Confluence) GetPage(id string) (*Page, error) {
 		return nil, errs[0]
 	}
 
-	if len(body) == 0 {
+	if len(res) == 0 {
 		return nil, fmt.Errorf("zero response")
 	}
 
-	json, err := gabs.ParseJSON([]byte(body))
+	json, err := gabs.ParseJSON([]byte(res))
 	if err != nil {
 		return nil, err
 	}
@@ -147,8 +147,12 @@ func (c *Confluence) GetPage(id string) (*Page, error) {
 	page.Status, _ = json.Path("status").Data().(string)
 	page.Title, _ = json.Path("title").Data().(string)
 	page.Link, _ = json.Path("title").Data().(string)
-	page.Body, _ = json.Path("body.view.value").Data().(string)
-	page.BodyT = template.HTML(page.Body)
+
+	body, _ := json.Path("body.view.value").Data().(string)
+	body = strings.Replace(body, "wiki/display/", "", -1)
+
+	page.Body = body
+	page.BodyT = template.HTML(body)
 
 	linkBase, _ := json.Path("_links.base").Data().(string)
 	linkWeb, _ := json.Path("_links.webui").Data().(string)

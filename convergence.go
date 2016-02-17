@@ -45,7 +45,7 @@ func (c *Convergence) space(ctx *gin.Context) {
 		return
 	}
 
-	page, err := c.Confluence.GetPage(space.HomepageID)
+	page, err := c.Confluence.GetPageById(space.HomepageID)
 	if err != nil {
 		ctx.AbortWithError(503, err)
 		return
