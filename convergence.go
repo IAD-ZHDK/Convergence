@@ -20,7 +20,7 @@ func (c *Convergence) Run() error {
 
 	router.GET("/", c.root)
 	router.GET("/:key", c.space)
-	router.GET("/:key/:page", c.page)
+	router.GET("/:key/:title", c.page)
 
 	return router.Run()
 }
@@ -46,7 +46,7 @@ func (c *Convergence) space(ctx *gin.Context) {
 		return
 	}
 
-	page, err := c.Confluence.GetPageById(space.HomepageID)
+	page, err := c.Confluence.GetPageById(key, space.HomepageID)
 	if err != nil {
 		ctx.AbortWithError(503, err)
 		return
@@ -57,11 +57,13 @@ func (c *Convergence) space(ctx *gin.Context) {
 
 func (c *Convergence) page(ctx *gin.Context) {
 	key, _ := ctx.Params.Get("key")
-	page, _ := ctx.Params.Get("page")
+	title, _ := ctx.Params.Get("title")
 
-	page, err := c.Confluence.GetPage(key, page)
+	page, err := c.Confluence.GetPageByTitle(key, title)
 	if err != nil {
 		ctx.AbortWithError(503, err)
 		return
 	}
+
+	ctx.HTML(http.StatusOK, "page.html", page)
 }

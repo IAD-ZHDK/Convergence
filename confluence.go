@@ -48,7 +48,11 @@ func NewConfluence() *Confluence {
 }
 
 func (c *Confluence) GetSpaces() ([]*Space, error) {
+	fmt.Printf("Check cache for key 'spaces-all'.\n")
+
 	if value, ok := c.cache.Get("spaces-all"); ok {
+		fmt.Printf("Got spaces from cache with key 'spaces-all'.\n")
+
 		spaces, _ := value.([]*Space)
 		return spaces, nil
 	}
@@ -96,6 +100,7 @@ func (c *Confluence) GetSpaces() ([]*Space, error) {
 	}
 
 	c.cache.Set("spaces-all", spaces, cache.DefaultExpiration)
+	fmt.Printf("Put spaces in cache with key 'spaces-all'.\n")
 
 	return spaces, nil
 }
@@ -115,14 +120,23 @@ func (c *Confluence) GetSpace(key string) (*Space, error) {
 	return nil, fmt.Errorf("space not found")
 }
 
-func (c *Confluence) GetPageById(key, id string) (*Page, error) {
-	if value, ok := c.cache.Get("pages-"+key+"-"+id); ok {
+func (c *Confluence) GetPageByTitle(key, title string) (*Page, error) {
+	cacheKey := "pages-"+key+"-"+title
+
+	fmt.Printf("Check cache for key '%s'.\n", cacheKey)
+
+	if value, ok := c.cache.Get(cacheKey); ok {
+		fmt.Printf("Got page from cache with key '%s'.\n", cacheKey)
+
 		page, _ := value.(*Page)
 		return page, nil
 	}
 
-	_, res, errs := c.client.Get(c.BaseURL+"/content/"+id).
+	_, res, errs := c.client.Get(c.BaseURL+"/content").
 		Set("Accept", "application/json, */*").
+		Query("title="+title).
+		Query("type=page").
+		Query("spaceKey="+key).
 		Query("expand=body.view").
 		SetBasicAuth(c.Username, c.Password).
 		End()
@@ -140,6 +154,55 @@ func (c *Confluence) GetPageById(key, id string) (*Page, error) {
 		return nil, err
 	}
 
+	results, err := json.Path("results").Children()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(results) == 0 {
+		return nil, fmt.Errorf("not found")
+	}
+
+	return c.handlePageData(key, results[0])
+}
+
+func (c *Confluence) GetPageById(key, id string) (*Page, error) {
+	cacheKey := "pages-"+key+"-"+id
+
+	fmt.Printf("Check cache for key '%s'.\n", cacheKey)
+
+	if value, ok := c.cache.Get(cacheKey); ok {
+		fmt.Printf("Got page from cache with key '%s'.\n", cacheKey)
+
+		page, _ := value.(*Page)
+		return page, nil
+	}
+
+	_, res, errs := c.client.Get(c.BaseURL+"/content/"+id).
+		Set("Accept", "application/json, */*").
+		Query("type=page").
+		Query("spaceKey="+key).
+		Query("expand=body.view").
+		SetBasicAuth(c.Username, c.Password).
+		End()
+
+	if len(errs) > 0 {
+		return nil, errs[0]
+	}
+
+	if len(res) == 0 {
+		return nil, fmt.Errorf("zero response")
+	}
+
+	json, err := gabs.ParseJSON([]byte(res))
+	if err != nil {
+		return nil, err
+	}
+
+	return c.handlePageData(key, json)
+}
+
+func (c *Confluence) handlePageData(key string, json *gabs.Container) (*Page, error) {
 	page := &Page{}
 
 	page.ID, _ = json.Path("id").Data().(string)
@@ -158,7 +221,12 @@ func (c *Confluence) GetPageById(key, id string) (*Page, error) {
 	linkWeb, _ := json.Path("_links.webui").Data().(string)
 	page.Link = linkBase + "/" + linkWeb
 
-	c.cache.Set("pages-"+key+"-"+id, page, cache.DefaultExpiration)
+	cacheKey1 := "pages-"+key+"-"+page.ID
+	cacheKey2 := "pages-"+key+"-"+strings.Replace(page.Title, " ", "+", -1)
+	c.cache.Set(cacheKey1, page, cache.DefaultExpiration)
+	c.cache.Set(cacheKey2, page, cache.DefaultExpiration)
+
+	fmt.Printf("Put page in cache with key '%s' and '%s'.\n", cacheKey1, cacheKey2)
 
 	return page, nil
 }
