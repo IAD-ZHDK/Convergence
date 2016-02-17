@@ -98,7 +98,27 @@ func (c *Confluence) GetSpaces() ([]*Space, error) {
 	return spaces, nil
 }
 
+func (c *Confluence) GetSpace(key string) (*Space, error) {
+	spaces, err := c.GetSpaces()
+	if err != nil {
+		return nil, err
+	}
+
+	for _, space := range spaces {
+		if space.Key == key {
+			return space, nil
+		}
+	}
+
+	return nil, fmt.Errorf("space not found")
+}
+
 func (c *Confluence) GetPage(id string) (*Page, error) {
+	if value, ok := c.cache.Get("page-" + id); ok {
+		page, _ := value.(*Page)
+		return page, nil
+	}
+
 	_, body, errs := c.client.Get(c.BaseURL+"/content/"+id).
 		Set("Accept", "application/json, */*").
 		Query("expand=body.view").
@@ -130,6 +150,8 @@ func (c *Confluence) GetPage(id string) (*Page, error) {
 	linkBase, _ := json.Path("_links.base").Data().(string)
 	linkWeb, _ := json.Path("_links.webui").Data().(string)
 	page.Link = linkBase + "/" + linkWeb
+
+	c.cache.Set("page-"+id, page, cache.DefaultExpiration)
 
 	return page, nil
 }
