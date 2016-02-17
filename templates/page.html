@@ -1,6 +1,18 @@
 {{ template "header.html" .}}
+
 <div class="page">
+  <div class="nav">
+    <ul>
+      {{range .Spaces}}
+      <li><a href="/page/{{.Key}}">{{.Name}}</a></li>
+      {{end}}
+    </ul>
+  </div>
+
+  {{with .Page}}
   <h1>{{.Title}}</h1>
   {{.BodyT}}
+  {{end}}
 </div>
+
 {{ template "footer.html" .}}
