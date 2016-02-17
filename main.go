@@ -2,29 +2,19 @@ package main
 
 import (
 	"os"
-
-	"github.com/kr/pretty"
 )
 
 func main() {
-	c := NewConfluence()
-	c.BaseURL = os.Getenv("BASE_URL")
-	c.Username = os.Getenv("USERNAME")
-	c.Password = os.Getenv("PASSWORD")
+	confluence := NewConfluence()
+	confluence.BaseURL = os.Getenv("BASE_URL")
+	confluence.Username = os.Getenv("USERNAME")
+	confluence.Password = os.Getenv("PASSWORD")
 
-	spaces, err := c.GetSpaces()
+	convergence := NewConvergence()
+	convergence.Confluence = confluence
+
+	err := convergence.Run()
 	if err != nil {
 		panic(err)
-	}
-
-	pretty.Println(spaces)
-
-	for _, space := range spaces {
-		page, err := c.GetPage(space.HomepageID)
-		if err != nil {
-			panic(err)
-		}
-
-		pretty.Println(page)
 	}
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"strings"
 	"time"
 
@@ -36,6 +37,7 @@ type Page struct {
 	Title  string
 	Link   string
 	Body   string
+	BodyT  template.HTML
 }
 
 func NewConfluence() *Confluence {
@@ -146,6 +148,7 @@ func (c *Confluence) GetPage(id string) (*Page, error) {
 	page.Title, _ = json.Path("title").Data().(string)
 	page.Link, _ = json.Path("title").Data().(string)
 	page.Body, _ = json.Path("body.view.value").Data().(string)
+	page.BodyT = template.HTML(page.Body)
 
 	linkBase, _ := json.Path("_links.base").Data().(string)
 	linkWeb, _ := json.Path("_links.webui").Data().(string)
