@@ -1,8 +1,10 @@
 {{ template "header.html" .}}
-<h1>Hello</h1>
-<ul>
-  {{range .Spaces}}
+<div class="page">
+  <h1>Convergence</h1>
+  <ul>
+    {{range .Spaces}}
     <li><a href="/page/{{.Key}}">{{.Name}}</a></li>
-  {{end}}
-</ul>
+    {{end}}
+  </ul>
+</div>
 {{ template "footer.html" .}}
