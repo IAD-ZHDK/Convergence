@@ -46,6 +46,11 @@ func NewConfluence() *Confluence {
 }
 
 func (c *Confluence) GetSpaces() ([]*Space, error) {
+	if value, ok := c.cache.Get("spaces"); ok {
+		spaces, _ := value.([]*Space)
+		return spaces, nil
+	}
+
 	_, body, errs := c.client.Get(c.BaseURL+"/space").
 		Set("Accept", "application/json, */*").
 		Query("expand=description.view").
@@ -87,6 +92,8 @@ func (c *Confluence) GetSpaces() ([]*Space, error) {
 
 		spaces[i] = space
 	}
+
+	c.cache.Set("spaces", spaces, cache.DefaultExpiration)
 
 	return spaces, nil
 }
