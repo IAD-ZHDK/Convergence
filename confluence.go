@@ -47,6 +47,10 @@ func NewConfluence() *Confluence {
 	}
 }
 
+func (c *Confluence) url(path string) string {
+	return c.BaseURL + "confluence/rest/api/" + path
+}
+
 func (c *Confluence) GetSpaces() ([]*Space, error) {
 	fmt.Printf("Check cache for key 'spaces-all'.\n")
 
@@ -57,7 +61,7 @@ func (c *Confluence) GetSpaces() ([]*Space, error) {
 		return spaces, nil
 	}
 
-	_, res, errs := c.client.Get(c.BaseURL+"/space").
+	_, res, errs := c.client.Get(c.url("space")).
 		Set("Accept", "application/json, */*").
 		Query("expand=description.view").
 		SetBasicAuth(c.Username, c.Password).
@@ -132,7 +136,7 @@ func (c *Confluence) GetPageByTitle(key, title string) (*Page, error) {
 		return page, nil
 	}
 
-	_, res, errs := c.client.Get(c.BaseURL+"/content").
+	_, res, errs := c.client.Get(c.url("content")).
 		Set("Accept", "application/json, */*").
 		Query("title="+title).
 		Query("type=page").
@@ -178,7 +182,7 @@ func (c *Confluence) GetPageById(key, id string) (*Page, error) {
 		return page, nil
 	}
 
-	_, res, errs := c.client.Get(c.BaseURL+"/content/"+id).
+	_, res, errs := c.client.Get(c.url("content/"+id)).
 		Set("Accept", "application/json, */*").
 		Query("type=page").
 		Query("spaceKey="+key).
