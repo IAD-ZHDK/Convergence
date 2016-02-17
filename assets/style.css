@@ -1,5 +1,6 @@
 body {
     margin: 100px;
+    font-size: 16px;
 }
 
 .page {
@@ -9,4 +10,19 @@ body {
 
 img {
     max-width: 800px;
+}
+
+table {
+    max-width: 800px;
+    font-size: 14px;
+}
+
+table td, table th {
+    padding: 6px;
+    border: 1px solid black;
+    text-align: left;
+}
+
+table th {
+    background-color: #eee;
 }
