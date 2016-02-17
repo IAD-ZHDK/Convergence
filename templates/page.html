@@ -1,13 +1,7 @@
-{{ template "header.html" .}}
+{{template "header.html" .}}
 
 <div class="page">
-  <div class="nav">
-    <ul>
-      {{range .Spaces}}
-      <li><a href="/page/{{.Key}}">{{.Name}}</a></li>
-      {{end}}
-    </ul>
-  </div>
+  {{template "nav.html" .}}
 
   {{with .Page}}
   <h1>{{.Title}}</h1>
@@ -15,4 +9,4 @@
   {{end}}
 </div>
 
-{{ template "footer.html" .}}
+{{template "footer.html" .}}
