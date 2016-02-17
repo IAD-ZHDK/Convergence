@@ -48,7 +48,7 @@ func NewConfluence() *Confluence {
 }
 
 func (c *Confluence) GetSpaces() ([]*Space, error) {
-	if value, ok := c.cache.Get("spaces"); ok {
+	if value, ok := c.cache.Get("spaces-all"); ok {
 		spaces, _ := value.([]*Space)
 		return spaces, nil
 	}
@@ -95,7 +95,7 @@ func (c *Confluence) GetSpaces() ([]*Space, error) {
 		spaces[i] = space
 	}
 
-	c.cache.Set("spaces", spaces, cache.DefaultExpiration)
+	c.cache.Set("spaces-all", spaces, cache.DefaultExpiration)
 
 	return spaces, nil
 }
@@ -115,8 +115,8 @@ func (c *Confluence) GetSpace(key string) (*Space, error) {
 	return nil, fmt.Errorf("space not found")
 }
 
-func (c *Confluence) GetPageById(id string) (*Page, error) {
-	if value, ok := c.cache.Get("page-" + id); ok {
+func (c *Confluence) GetPageById(key, id string) (*Page, error) {
+	if value, ok := c.cache.Get("pages-"+key+"-"+id); ok {
 		page, _ := value.(*Page)
 		return page, nil
 	}
@@ -158,7 +158,7 @@ func (c *Confluence) GetPageById(id string) (*Page, error) {
 	linkWeb, _ := json.Path("_links.webui").Data().(string)
 	page.Link = linkBase + "/" + linkWeb
 
-	c.cache.Set("page-"+id, page, cache.DefaultExpiration)
+	c.cache.Set("pages-"+key+"-"+id, page, cache.DefaultExpiration)
 
 	return page, nil
 }
