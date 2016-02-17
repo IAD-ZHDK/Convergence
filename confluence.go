@@ -217,6 +217,7 @@ func (c *Confluence) handlePageData(key string, json *gabs.Container) (*Page, er
 
 	body, _ := json.Path("body.view.value").Data().(string)
 	body = strings.Replace(body, "wiki/display/", "", -1)
+	body = strings.Replace(body, "/wiki/download/", c.BaseURL + "/wiki/download/", -1)
 
 	page.Body = body
 	page.BodyT = template.HTML(body)
