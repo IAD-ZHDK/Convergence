@@ -33,6 +33,7 @@ func (c *Convergence) root(ctx *gin.Context) {
 	}
 
 	ctx.HTML(http.StatusOK, "index.html", gin.H{
+		"Title": "Convergence",
 		"Spaces": spaces,
 	})
 }
