@@ -17,10 +17,11 @@ func NewConvergence() *Convergence {
 func (c *Convergence) Run() error {
 	router := gin.Default()
 	router.LoadHTMLGlob("templates/*")
+	router.Static("/assets", "./assets")
 
 	router.GET("/", c.root)
-	router.GET("/:key", c.space)
-	router.GET("/:key/:title", c.page)
+	router.GET("/page/:key", c.space)
+	router.GET("/page/:key/:title", c.page)
 
 	return router.Run()
 }
