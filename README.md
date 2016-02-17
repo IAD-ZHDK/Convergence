@@ -1,6 +1,6 @@
 # Convergence
 
-**A fast frontend for Confluence.**
+**A custom frontend for Confluence.**
 
 ## Environment
 
