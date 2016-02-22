@@ -1,12 +1,10 @@
 {{template "header.html" .}}
 
-<div class="page">
-  {{template "nav.html" .}}
+{{template "nav.html" .}}
 
-  {{with .Page}}
-  <h1>{{.Title}}</h1>
-  {{.BodyT}}
-  {{end}}
-</div>
+{{with .Page}}
+<h1>{{.Title}}</h1>
+{{.BodyT}}
+{{end}}
 
 {{template "footer.html" .}}

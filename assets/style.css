@@ -26,9 +26,14 @@ table {
 }
 
 table td, table th {
-    padding: 6px;
+    padding: 8px;
     border: 1px solid black;
     text-align: left;
+    vertical-align: top;
+}
+
+table td p {
+    margin: 0;
 }
 
 table th {
