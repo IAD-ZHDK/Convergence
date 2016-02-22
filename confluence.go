@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"strings"
 	"time"
+	"errors"
 
 	"github.com/Jeffail/gabs"
 	"github.com/parnurzeal/gorequest"
@@ -39,6 +40,8 @@ type Page struct {
 	Body   string
 	BodyT  template.HTML
 }
+
+var ErrNotFound = errors.New("not found")
 
 func NewConfluence() *Confluence {
 	return &Confluence{
@@ -121,7 +124,7 @@ func (c *Confluence) GetSpace(key string) (*Space, error) {
 		}
 	}
 
-	return nil, fmt.Errorf("space not found")
+	return nil, ErrNotFound
 }
 
 func (c *Confluence) GetPageByTitle(key, title string) (*Page, error) {
@@ -164,7 +167,7 @@ func (c *Confluence) GetPageByTitle(key, title string) (*Page, error) {
 	}
 
 	if len(results) == 0 {
-		return nil, fmt.Errorf("not found")
+		return nil, ErrNotFound
 	}
 
 	return c.handlePageData(key, results[0])
@@ -195,7 +198,7 @@ func (c *Confluence) GetPageById(key, id string) (*Page, error) {
 	}
 
 	if len(res) == 0 {
-		return nil, fmt.Errorf("zero response")
+		return nil, ErrNotFound
 	}
 
 	json, err := gabs.ParseJSON([]byte(res))

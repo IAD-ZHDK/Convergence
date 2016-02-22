@@ -84,13 +84,20 @@ func (c *Convergence) page(ctx *gin.Context) {
 func (c *Convergence) error(ctx *gin.Context, err error) {
 	fmt.Printf("Error: %s\n", err.Error())
 
+	if err == ErrNotFound {
+		ctx.HTML(http.StatusNotFound, "404.html", gin.H{
+			"Title": "Not Found",
+		})
+		return
+	}
+
 	ctx.HTML(http.StatusInternalServerError, "503.html", gin.H{
 		"Title": "Internal Server Error",
 	})
 }
 
 func (c *Convergence) notFound(ctx *gin.Context) {
-	ctx.HTML(http.StatusOK, "404.html", gin.H{
+	ctx.HTML(http.StatusNotFound, "404.html", gin.H{
 		"Title": "Not Found",
 	})
 }
