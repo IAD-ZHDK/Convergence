@@ -45,12 +45,6 @@ func (c *Convergence) root(ctx *gin.Context) {
 func (c *Convergence) space(ctx *gin.Context) {
 	key, _ := ctx.Params.Get("key")
 
-	spaces, err := c.Confluence.GetSpaces()
-	if err != nil {
-		c.error(ctx, err)
-		return
-	}
-
 	space, err := c.Confluence.GetSpace(key)
 	if err != nil {
 		c.error(ctx, err)
@@ -66,19 +60,13 @@ func (c *Convergence) space(ctx *gin.Context) {
 	ctx.HTML(http.StatusOK, "page.html", gin.H{
 		"Title": page.Title,
 		"Page": page,
-		"Spaces": spaces,
+		"Index": key,
 	})
 }
 
 func (c *Convergence) page(ctx *gin.Context) {
 	key, _ := ctx.Params.Get("key")
 	title, _ := ctx.Params.Get("title")
-
-	spaces, err := c.Confluence.GetSpaces()
-	if err != nil {
-		c.error(ctx, err)
-		return
-	}
 
 	page, err := c.Confluence.GetPageByTitle(key, title)
 	if err != nil {
@@ -89,7 +77,7 @@ func (c *Convergence) page(ctx *gin.Context) {
 	ctx.HTML(http.StatusOK, "page.html", gin.H{
 		"Title": page.Title,
 		"Page": page,
-		"Spaces": spaces,
+		"Index": key,
 	})
 }
 

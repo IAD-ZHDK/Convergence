@@ -1,9 +1,13 @@
 {{template "header.html" .}}
 
-{{template "nav.html" .}}
-
-<h1>IAD Wiki</h1>
+<h1 class="title">IAD Wiki</h1>
 <p><strong>Welcome to the IAD Wiki.</strong></p>
 <p>On this Wiki you will find various material...</p>
+
+<ul>
+  {{range .Spaces}}
+  <li><a href="/page/{{.Key}}">{{.Name}}</a></li>
+  {{end}}
+</ul>
 
 {{template "footer.html" .}}

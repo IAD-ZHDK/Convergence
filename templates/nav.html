@@ -1,8 +1,4 @@
-<div class="nav">
-  <ul>
-    <li><a href="/">Home</a></li>
-    {{range .Spaces}}
-    <li><a href="/page/{{.Key}}">{{.Name}}</a></li>
-    {{end}}
-  </ul>
-</div>
+<ul class="nav">
+  <li><a href="/page/{{.Index}}">Page Index</a></li>
+  <li><a href="/">Wiki Home</a></li>
+</ul>
