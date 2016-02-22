@@ -1,10 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"fmt"
 )
 
 type Convergence struct {
@@ -37,7 +37,7 @@ func (c *Convergence) root(ctx *gin.Context) {
 	}
 
 	ctx.HTML(http.StatusOK, "index.html", gin.H{
-		"Title": "IAD Wiki",
+		"Title":  "IAD Wiki",
 		"Spaces": spaces,
 	})
 }
@@ -59,7 +59,7 @@ func (c *Convergence) space(ctx *gin.Context) {
 
 	ctx.HTML(http.StatusOK, "page.html", gin.H{
 		"Title": page.Title,
-		"Page": page,
+		"Page":  page,
 		"Index": key,
 	})
 }
@@ -76,7 +76,7 @@ func (c *Convergence) page(ctx *gin.Context) {
 
 	ctx.HTML(http.StatusOK, "page.html", gin.H{
 		"Title": page.Title,
-		"Page": page,
+		"Page":  page,
 		"Index": key,
 	})
 }

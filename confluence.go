@@ -1,11 +1,11 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
 	"strings"
 	"time"
-	"errors"
 
 	"github.com/Jeffail/gabs"
 	"github.com/parnurzeal/gorequest"
@@ -128,7 +128,7 @@ func (c *Confluence) GetSpace(key string) (*Space, error) {
 }
 
 func (c *Confluence) GetPageByTitle(key, title string) (*Page, error) {
-	cacheKey := "pages-"+key+"-"+title
+	cacheKey := "pages-" + key + "-" + title
 
 	fmt.Printf("Check cache for key '%s'.\n", cacheKey)
 
@@ -174,7 +174,7 @@ func (c *Confluence) GetPageByTitle(key, title string) (*Page, error) {
 }
 
 func (c *Confluence) GetPageById(key, id string) (*Page, error) {
-	cacheKey := "pages-"+key+"-"+id
+	cacheKey := "pages-" + key + "-" + id
 
 	fmt.Printf("Check cache for key '%s'.\n", cacheKey)
 
@@ -220,7 +220,7 @@ func (c *Confluence) handlePageData(key string, json *gabs.Container) (*Page, er
 
 	body, _ := json.Path("body.view.value").Data().(string)
 	body = strings.Replace(body, "/wiki/display/", "/page/", -1)
-	body = strings.Replace(body, "/wiki/download/", c.BaseURL + "/wiki/download/", -1)
+	body = strings.Replace(body, "/wiki/download/", c.BaseURL+"/wiki/download/", -1)
 
 	page.Body = body
 	page.BodyT = template.HTML(body)
@@ -229,8 +229,8 @@ func (c *Confluence) handlePageData(key string, json *gabs.Container) (*Page, er
 	linkWeb, _ := json.Path("_links.webui").Data().(string)
 	page.Link = linkBase + "/" + linkWeb
 
-	cacheKey1 := "pages-"+key+"-"+page.ID
-	cacheKey2 := "pages-"+key+"-"+strings.Replace(page.Title, " ", "+", -1)
+	cacheKey1 := "pages-" + key + "-" + page.ID
+	cacheKey2 := "pages-" + key + "-" + strings.Replace(page.Title, " ", "+", -1)
 	c.cache.Set(cacheKey1, page, cache.DefaultExpiration)
 	c.cache.Set(cacheKey2, page, cache.DefaultExpiration)
 
