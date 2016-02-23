@@ -5,6 +5,7 @@
 ## Environment
 
 ```
+PORT
 BASE_URL
 USERNAME
 PASSWORD
