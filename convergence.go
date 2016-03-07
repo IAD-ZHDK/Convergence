@@ -23,6 +23,7 @@ func (c *Convergence) Run() error {
 	router.GET("/", c.root)
 	router.GET("/page/:key", c.space)
 	router.GET("/page/:key/:title", c.page)
+	router.GET("/reset", c.reset)
 
 	router.NoRoute(c.notFound)
 
@@ -79,6 +80,12 @@ func (c *Convergence) page(ctx *gin.Context) {
 		"Page":  page,
 		"Index": key,
 	})
+}
+
+func (c *Convergence) reset(ctx *gin.Context) {
+	c.Confluence.Reset()
+
+	ctx.Redirect(http.StatusTemporaryRedirect, "/")
 }
 
 func (c *Convergence) error(ctx *gin.Context, err error) {

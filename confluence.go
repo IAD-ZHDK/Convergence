@@ -209,6 +209,10 @@ func (c *Confluence) GetPageById(key, id string) (*Page, error) {
 	return c.handlePageData(key, json)
 }
 
+func (c *Confluence) Reset() {
+	c.cache = cache.New(5*time.Minute, 30*time.Second)
+}
+
 func (c *Confluence) handlePageData(key string, json *gabs.Container) (*Page, error) {
 	page := &Page{}
 

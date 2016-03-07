@@ -78,3 +78,8 @@ table th {
     margin-top: 100px;
     color: #aaa;
 }
+
+.footer .reset {
+    float: right;
+    color: #ddd;
+}
