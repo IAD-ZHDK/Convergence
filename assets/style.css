@@ -66,7 +66,7 @@ table td, table th {
     vertical-align: top;
 }
 
-table td p {
+table td p, table th p {
     margin: 0;
 }
 
