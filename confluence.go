@@ -51,7 +51,7 @@ func NewConfluence() *Confluence {
 }
 
 func (c *Confluence) url(path string) string {
-	return c.BaseURL + "confluence/rest/api/" + path
+	return c.BaseURL + "wiki/rest/api/" + path
 }
 
 func (c *Confluence) GetSpaces() ([]*Space, error) {
