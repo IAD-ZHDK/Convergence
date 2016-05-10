@@ -107,7 +107,12 @@ func (c *Convergence) download(ctx *gin.Context) {
 func (c *Convergence) reset(ctx *gin.Context) {
 	c.Confluence.Reset()
 
-	ctx.Redirect(http.StatusTemporaryRedirect, "/")
+	referer := ctx.Request.Referer()
+	if len(referer) <= 0 {
+		referer = "/"
+	}
+
+	ctx.Redirect(http.StatusTemporaryRedirect, referer)
 }
 
 func (c *Convergence) error(ctx *gin.Context, err error) {
