@@ -41,6 +41,11 @@ type Page struct {
 	BodyT  template.HTML
 }
 
+type Attachment struct {
+	Data        []byte
+	ContentType string
+}
+
 var ErrNotFound = errors.New("not found")
 
 func NewConfluence() *Confluence {
@@ -209,6 +214,44 @@ func (c *Confluence) GetPageById(key, id string) (*Page, error) {
 	return c.handlePageData(key, json)
 }
 
+func (c *Confluence) GetAttachment(id, file, version, date, api string) (*Attachment, error) {
+	cacheKey := "attachment-" + id + "-" + file + "-" + date
+
+	fmt.Printf("Check cache for key '%s'.\n", cacheKey)
+
+	if value, ok := c.cache.Get(cacheKey); ok {
+		fmt.Printf("Got attachment from cache with key '%s'.\n", cacheKey)
+
+		attachment := value.(*Attachment)
+		return attachment, nil
+	}
+
+	res, buf, errs := c.client.Get(c.BaseURL+"wiki/download/attachments/"+id+"/"+file).
+		Set("Accept", "*/*").
+		Query("version="+version).
+		Query("modificationDate="+date).
+		Query("api="+api).
+		SetBasicAuth(c.Username, c.Password).
+		EndBytes()
+
+	if len(errs) > 0 {
+		return nil, errs[0]
+	}
+
+	if len(buf) == 0 {
+		return nil, ErrNotFound
+	}
+
+	attachment := &Attachment{
+		ContentType: res.Header.Get("Content-Type"),
+		Data:        buf,
+	}
+
+	c.cache.Set(cacheKey, attachment, cache.DefaultExpiration)
+
+	return attachment, nil
+}
+
 func (c *Confluence) Reset() {
 	c.cache = cache.New(5*time.Minute, 30*time.Second)
 }
@@ -224,7 +267,7 @@ func (c *Confluence) handlePageData(key string, json *gabs.Container) (*Page, er
 
 	body := json.Path("body.view.value").Data().(string)
 	body = strings.Replace(body, "/wiki/display/", "/page/", -1)
-	body = strings.Replace(body, "/wiki/download/", c.BaseURL+"/wiki/download/", -1)
+	body = strings.Replace(body, "/wiki/download/attachments/", "/download/", -1)
 
 	page.Body = body
 	page.BodyT = template.HTML(body)
