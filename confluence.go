@@ -60,7 +60,7 @@ func (c *Confluence) GetSpaces() ([]*Space, error) {
 	if value, ok := c.cache.Get("spaces-all"); ok {
 		fmt.Printf("Got spaces from cache with key 'spaces-all'.\n")
 
-		spaces, _ := value.([]*Space)
+		spaces := value.([]*Space)
 		return spaces, nil
 	}
 
@@ -93,14 +93,14 @@ func (c *Confluence) GetSpaces() ([]*Space, error) {
 	for i, obj := range array {
 		space := &Space{}
 
-		space.ID, _ = obj.Path("id").Data().(string)
-		space.Key, _ = obj.Path("key").Data().(string)
-		space.Name, _ = obj.Path("name").Data().(string)
-		space.Type, _ = obj.Path("type").Data().(string)
-		space.Link, _ = obj.Path("_links.self").Data().(string)
-		space.Description, _ = obj.Path("description.view.value").Data().(string)
+		space.ID = obj.Path("id").Data().(string)
+		space.Key = obj.Path("key").Data().(string)
+		space.Name = obj.Path("name").Data().(string)
+		space.Type = obj.Path("type").Data().(string)
+		space.Link = obj.Path("_links.self").Data().(string)
+		space.Description = obj.Path("description.view.value").Data().(string)
 
-		linkHomepage, _ := obj.Path("_expandable.homepage").Data().(string)
+		linkHomepage := obj.Path("_expandable.homepage").Data().(string)
 		space.HomepageID = strings.Replace(linkHomepage, "/rest/api/content/", "", -1)
 
 		spaces[i] = space
@@ -135,7 +135,7 @@ func (c *Confluence) GetPageByTitle(key, title string) (*Page, error) {
 	if value, ok := c.cache.Get(cacheKey); ok {
 		fmt.Printf("Got page from cache with key '%s'.\n", cacheKey)
 
-		page, _ := value.(*Page)
+		page := value.(*Page)
 		return page, nil
 	}
 
@@ -181,7 +181,7 @@ func (c *Confluence) GetPageById(key, id string) (*Page, error) {
 	if value, ok := c.cache.Get(cacheKey); ok {
 		fmt.Printf("Got page from cache with key '%s'.\n", cacheKey)
 
-		page, _ := value.(*Page)
+		page := value.(*Page)
 		return page, nil
 	}
 
@@ -216,21 +216,21 @@ func (c *Confluence) Reset() {
 func (c *Confluence) handlePageData(key string, json *gabs.Container) (*Page, error) {
 	page := &Page{}
 
-	page.ID, _ = json.Path("id").Data().(string)
-	page.Type, _ = json.Path("type").Data().(string)
-	page.Status, _ = json.Path("status").Data().(string)
-	page.Title, _ = json.Path("title").Data().(string)
-	page.Link, _ = json.Path("title").Data().(string)
+	page.ID = json.Path("id").Data().(string)
+	page.Type = json.Path("type").Data().(string)
+	page.Status = json.Path("status").Data().(string)
+	page.Title = json.Path("title").Data().(string)
+	page.Link = json.Path("title").Data().(string)
 
-	body, _ := json.Path("body.view.value").Data().(string)
+	body := json.Path("body.view.value").Data().(string)
 	body = strings.Replace(body, "/wiki/display/", "/page/", -1)
 	body = strings.Replace(body, "/wiki/download/", c.BaseURL+"/wiki/download/", -1)
 
 	page.Body = body
 	page.BodyT = template.HTML(body)
 
-	linkBase, _ := json.Path("_links.base").Data().(string)
-	linkWeb, _ := json.Path("_links.webui").Data().(string)
+	linkBase := json.Path("_links.base").Data().(string)
+	linkWeb := json.Path("_links.webui").Data().(string)
 	page.Link = linkBase + "/" + linkWeb
 
 	cacheKey1 := "pages-" + key + "-" + page.ID

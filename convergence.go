@@ -44,7 +44,7 @@ func (c *Convergence) root(ctx *gin.Context) {
 }
 
 func (c *Convergence) space(ctx *gin.Context) {
-	key, _ := ctx.Params.Get("key")
+	key := ctx.Param("key")
 
 	space, err := c.Confluence.GetSpace(key)
 	if err != nil {
@@ -66,8 +66,8 @@ func (c *Convergence) space(ctx *gin.Context) {
 }
 
 func (c *Convergence) page(ctx *gin.Context) {
-	key, _ := ctx.Params.Get("key")
-	title, _ := ctx.Params.Get("title")
+	key := ctx.Param("key")
+	title := ctx.Param("title")
 
 	page, err := c.Confluence.GetPageByTitle(key, title)
 	if err != nil {
