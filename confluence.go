@@ -50,7 +50,7 @@ var ErrNotFound = errors.New("not found")
 
 func NewConfluence() *Confluence {
 	return &Confluence{
-		cache:  cache.New(5*time.Minute, 30*time.Second),
+		cache:  cache.New(30*time.Minute, 5*time.Minute),
 		client: gorequest.New(),
 	}
 }
