@@ -3,8 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"html/template"
-	"strings"
 	"time"
 
 	"github.com/Jeffail/gabs"
@@ -25,13 +23,13 @@ type Space struct {
 	Key         string
 	Name        string
 	Description string
-	HomepageID  string
+	Homepage    Page
 }
 
 type Page struct {
 	ID    string
 	Title string
-	Body  template.HTML
+	Body  string
 }
 
 type Attachment struct {
@@ -64,7 +62,7 @@ func (c *Confluence) GetSpaces() ([]*Space, error) {
 
 	_, res, errs := c.client.Get(c.url("space")).
 		Set("Accept", "application/json, */*").
-		Query("expand=description.view").
+		Query("expand=description.view,homepage.body.view").
 		SetBasicAuth(c.Username, c.Password).
 		End()
 
@@ -94,9 +92,11 @@ func (c *Confluence) GetSpaces() ([]*Space, error) {
 		space.Key = obj.Path("key").Data().(string)
 		space.Name = obj.Path("name").Data().(string)
 		space.Description = obj.Path("description.view.value").Data().(string)
-
-		linkHomepage := obj.Path("_expandable.homepage").Data().(string)
-		space.HomepageID = strings.Replace(linkHomepage, "/rest/api/content/", "", -1)
+		space.Homepage = Page{
+			ID: obj.Path("homepage.id").Data().(string),
+			Title: obj.Path("homepage.title").Data().(string),
+			Body: obj.Path("homepage.body.view.value").Data().(string),
+		}
 
 		spaces[i] = space
 	}
@@ -165,43 +165,17 @@ func (c *Confluence) GetPageByTitle(key, title string) (*Page, error) {
 		return nil, ErrNotFound
 	}
 
-	return c.handlePageData(key, results[0])
-}
+	obj := results[0]
+	page := &Page{}
 
-func (c *Confluence) GetPageById(key, id string) (*Page, error) {
-	cacheKey := "pages-" + key + "-" + id
+	page.ID = obj.Path("id").Data().(string)
+	page.Title = obj.Path("title").Data().(string)
+	page.Body = obj.Path("body.view.value").Data().(string)
 
-	fmt.Printf("Check cache for key '%s'.\n", cacheKey)
+	c.cache.Set(cacheKey, page, cache.DefaultExpiration)
+	fmt.Printf("Put page in cache with key '%s'.\n", cacheKey)
 
-	if value, ok := c.cache.Get(cacheKey); ok {
-		fmt.Printf("Got page from cache with key '%s'.\n", cacheKey)
-
-		page := value.(*Page)
-		return page, nil
-	}
-
-	_, res, errs := c.client.Get(c.url("content/"+id)).
-		Set("Accept", "application/json, */*").
-		Query("type=page").
-		Query("spaceKey="+key).
-		Query("expand=body.view").
-		SetBasicAuth(c.Username, c.Password).
-		End()
-
-	if len(errs) > 0 {
-		return nil, errs[0]
-	}
-
-	if len(res) == 0 {
-		return nil, ErrNotFound
-	}
-
-	json, err := gabs.ParseJSON([]byte(res))
-	if err != nil {
-		return nil, err
-	}
-
-	return c.handlePageData(key, json)
+	return page, nil
 }
 
 func (c *Confluence) GetAttachment(id, file, version, date, api string) (*Attachment, error) {
@@ -244,25 +218,4 @@ func (c *Confluence) GetAttachment(id, file, version, date, api string) (*Attach
 
 func (c *Confluence) Reset() {
 	c.cache = cache.New(5*time.Minute, 30*time.Second)
-}
-
-func (c *Confluence) handlePageData(key string, json *gabs.Container) (*Page, error) {
-	page := &Page{}
-
-	page.ID = json.Path("id").Data().(string)
-	page.Title = json.Path("title").Data().(string)
-
-	body := json.Path("body.view.value").Data().(string)
-	body = strings.Replace(body, "/wiki/display/", "/page/", -1)
-	body = strings.Replace(body, "/wiki/download/attachments/", "/download/", -1)
-	page.Body = template.HTML(body)
-
-	cacheKey1 := "pages-" + key + "-" + page.ID
-	cacheKey2 := "pages-" + key + "-" + strings.Replace(page.Title, " ", "+", -1)
-	c.cache.Set(cacheKey1, page, cache.DefaultExpiration)
-	c.cache.Set(cacheKey2, page, cache.DefaultExpiration)
-
-	fmt.Printf("Put page in cache with key '%s' and '%s'.\n", cacheKey1, cacheKey2)
-
-	return page, nil
 }

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"html/template"
 )
 
 type Convergence struct {
@@ -54,15 +55,9 @@ func (c *Convergence) space(ctx *gin.Context) {
 		return
 	}
 
-	page, err := c.Confluence.GetPageById(key, space.HomepageID)
-	if err != nil {
-		c.error(ctx, err)
-		return
-	}
-
 	ctx.HTML(http.StatusOK, "page.html", gin.H{
-		"Title": page.Title,
-		"Page":  page,
+		"Title": space.Name,
+		"Body": c.processBody(space.Homepage.Body),
 		"Index": key,
 	})
 }
@@ -79,7 +74,7 @@ func (c *Convergence) page(ctx *gin.Context) {
 
 	ctx.HTML(http.StatusOK, "page.html", gin.H{
 		"Title": page.Title,
-		"Page":  page,
+		"Body": c.processBody(page.Body),
 		"Index": key,
 	})
 }
@@ -113,6 +108,12 @@ func (c *Convergence) reset(ctx *gin.Context) {
 	}
 
 	ctx.Redirect(http.StatusTemporaryRedirect, referer)
+}
+
+func (c *Convergence) processBody(body string) template.HTML {
+	body = strings.Replace(body, "/wiki/display/", "/page/", -1)
+	body = strings.Replace(body, "/wiki/download/attachments/", "/download/", -1)
+	return template.HTML(body)
 }
 
 func (c *Convergence) error(ctx *gin.Context, err error) {
