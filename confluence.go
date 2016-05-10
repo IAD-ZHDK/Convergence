@@ -22,23 +22,16 @@ type Confluence struct {
 }
 
 type Space struct {
-	ID          string
 	Key         string
 	Name        string
-	Type        string
-	Link        string
 	Description string
 	HomepageID  string
 }
 
 type Page struct {
-	ID     string
-	Type   string
-	Status string
-	Title  string
-	Link   string
-	Body   string
-	BodyT  template.HTML
+	ID    string
+	Title string
+	Body  template.HTML
 }
 
 type Attachment struct {
@@ -98,11 +91,8 @@ func (c *Confluence) GetSpaces() ([]*Space, error) {
 	for i, obj := range array {
 		space := &Space{}
 
-		space.ID = obj.Path("id").Data().(string)
 		space.Key = obj.Path("key").Data().(string)
 		space.Name = obj.Path("name").Data().(string)
-		space.Type = obj.Path("type").Data().(string)
-		space.Link = obj.Path("_links.self").Data().(string)
 		space.Description = obj.Path("description.view.value").Data().(string)
 
 		linkHomepage := obj.Path("_expandable.homepage").Data().(string)
@@ -260,21 +250,12 @@ func (c *Confluence) handlePageData(key string, json *gabs.Container) (*Page, er
 	page := &Page{}
 
 	page.ID = json.Path("id").Data().(string)
-	page.Type = json.Path("type").Data().(string)
-	page.Status = json.Path("status").Data().(string)
 	page.Title = json.Path("title").Data().(string)
-	page.Link = json.Path("title").Data().(string)
 
 	body := json.Path("body.view.value").Data().(string)
 	body = strings.Replace(body, "/wiki/display/", "/page/", -1)
 	body = strings.Replace(body, "/wiki/download/attachments/", "/download/", -1)
-
-	page.Body = body
-	page.BodyT = template.HTML(body)
-
-	linkBase := json.Path("_links.base").Data().(string)
-	linkWeb := json.Path("_links.webui").Data().(string)
-	page.Link = linkBase + "/" + linkWeb
+	page.Body = template.HTML(body)
 
 	cacheKey1 := "pages-" + key + "-" + page.ID
 	cacheKey2 := "pages-" + key + "-" + strings.Replace(page.Title, " ", "+", -1)
