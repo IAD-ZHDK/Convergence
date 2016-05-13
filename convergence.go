@@ -57,7 +57,7 @@ func (c *Convergence) space(ctx *gin.Context) {
 
 	ctx.HTML(http.StatusOK, "page.html", gin.H{
 		"Title": space.Name,
-		"Body": c.processBody(space.Homepage.Body),
+		"Body":  c.processBody(space.Homepage.Body),
 		"Index": key,
 	})
 }
@@ -74,7 +74,7 @@ func (c *Convergence) page(ctx *gin.Context) {
 
 	ctx.HTML(http.StatusOK, "page.html", gin.H{
 		"Title": page.Title,
-		"Body": c.processBody(page.Body),
+		"Body":  c.processBody(page.Body),
 		"Index": key,
 	})
 }

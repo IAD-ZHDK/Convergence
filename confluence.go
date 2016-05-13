@@ -15,8 +15,9 @@ type Confluence struct {
 	Username string
 	Password string
 
-	cache  *cache.Cache
-	client *gorequest.SuperAgent
+	contentCache    *cache.Cache
+	attachmentCache *cache.Cache
+	client          *gorequest.SuperAgent
 }
 
 type Space struct {
@@ -40,10 +41,13 @@ type Attachment struct {
 var ErrNotFound = errors.New("not found")
 
 func NewConfluence() *Confluence {
-	return &Confluence{
-		cache:  cache.New(30*time.Minute, 5*time.Minute),
+	c := &Confluence{
 		client: gorequest.New(),
 	}
+
+	c.Reset()
+
+	return c
 }
 
 func (c *Confluence) url(path string) string {
@@ -51,11 +55,9 @@ func (c *Confluence) url(path string) string {
 }
 
 func (c *Confluence) GetSpaces() ([]*Space, error) {
-	fmt.Printf("Check cache for key 'spaces-all'.\n")
+	cacheKey := "spaces"
 
-	if value, ok := c.cache.Get("spaces-all"); ok {
-		fmt.Printf("Got spaces from cache with key 'spaces-all'.\n")
-
+	if value, ok := c.contentCache.Get(cacheKey); ok {
 		spaces := value.([]*Space)
 		return spaces, nil
 	}
@@ -93,16 +95,15 @@ func (c *Confluence) GetSpaces() ([]*Space, error) {
 		space.Name = obj.Path("name").Data().(string)
 		space.Description = obj.Path("description.view.value").Data().(string)
 		space.Homepage = Page{
-			ID: obj.Path("homepage.id").Data().(string),
+			ID:    obj.Path("homepage.id").Data().(string),
 			Title: obj.Path("homepage.title").Data().(string),
-			Body: obj.Path("homepage.body.view.value").Data().(string),
+			Body:  obj.Path("homepage.body.view.value").Data().(string),
 		}
 
 		spaces[i] = space
 	}
 
-	c.cache.Set("spaces-all", spaces, cache.DefaultExpiration)
-	fmt.Printf("Put spaces in cache with key 'spaces-all'.\n")
+	c.contentCache.Set(cacheKey, spaces, cache.DefaultExpiration)
 
 	return spaces, nil
 }
@@ -123,13 +124,9 @@ func (c *Confluence) GetSpace(key string) (*Space, error) {
 }
 
 func (c *Confluence) GetPageByTitle(key, title string) (*Page, error) {
-	cacheKey := "pages-" + key + "-" + title
+	cacheKey := "page-" + key + "-" + title
 
-	fmt.Printf("Check cache for key '%s'.\n", cacheKey)
-
-	if value, ok := c.cache.Get(cacheKey); ok {
-		fmt.Printf("Got page from cache with key '%s'.\n", cacheKey)
-
+	if value, ok := c.contentCache.Get(cacheKey); ok {
 		page := value.(*Page)
 		return page, nil
 	}
@@ -172,20 +169,15 @@ func (c *Confluence) GetPageByTitle(key, title string) (*Page, error) {
 	page.Title = obj.Path("title").Data().(string)
 	page.Body = obj.Path("body.view.value").Data().(string)
 
-	c.cache.Set(cacheKey, page, cache.DefaultExpiration)
-	fmt.Printf("Put page in cache with key '%s'.\n", cacheKey)
+	c.contentCache.Set(cacheKey, page, cache.DefaultExpiration)
 
 	return page, nil
 }
 
 func (c *Confluence) GetAttachment(id, file, version, date, api string) (*Attachment, error) {
-	cacheKey := "attachment-" + id + "-" + file + "-" + date
+	cacheKey := id + "-" + file + "-" + date
 
-	fmt.Printf("Check cache for key '%s'.\n", cacheKey)
-
-	if value, ok := c.cache.Get(cacheKey); ok {
-		fmt.Printf("Got attachment from cache with key '%s'.\n", cacheKey)
-
+	if value, ok := c.attachmentCache.Get(cacheKey); ok {
 		attachment := value.(*Attachment)
 		return attachment, nil
 	}
@@ -211,11 +203,12 @@ func (c *Confluence) GetAttachment(id, file, version, date, api string) (*Attach
 		Data:        buf,
 	}
 
-	c.cache.Set(cacheKey, attachment, cache.DefaultExpiration)
+	c.attachmentCache.Set(cacheKey, attachment, cache.DefaultExpiration)
 
 	return attachment, nil
 }
 
 func (c *Confluence) Reset() {
-	c.cache = cache.New(5*time.Minute, 30*time.Second)
+	c.contentCache = cache.New(30*time.Minute, time.Minute)
+	c.attachmentCache = cache.New(24*time.Hour, time.Hour)
 }
