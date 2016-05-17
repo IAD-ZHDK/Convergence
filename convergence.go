@@ -25,7 +25,7 @@ func (c *Convergence) Run() error {
 	router.GET("/", c.root)
 	router.GET("/page/:key", c.space)
 	router.GET("/page/:key/:title", c.page)
-	router.GET("/download/:id/:file", c.download)
+	router.GET("/download/:type/:id/:file", c.download)
 	router.GET("/reset", c.reset)
 
 	router.NoRoute(c.notFound)
@@ -80,23 +80,20 @@ func (c *Convergence) page(ctx *gin.Context) {
 }
 
 func (c *Convergence) download(ctx *gin.Context) {
-	if !strings.HasPrefix(ctx.Request.URL.Path, "/download/") {
-		return
-	}
-
+	typ := ctx.Param("type")
 	id := ctx.Param("id")
 	file := ctx.Param("file")
 	version := ctx.Query("version")
 	date := ctx.Query("modificationDate")
 	api := ctx.Query("api")
 
-	attachment, err := c.Confluence.GetAttachment(id, file, version, date, api)
+	download, err := c.Confluence.GetDownload(typ, id, file, version, date, api)
 	if err != nil {
 		c.error(ctx, err)
 		return
 	}
 
-	ctx.Data(200, attachment.ContentType, attachment.Data)
+	ctx.Data(200, download.ContentType, download.Data)
 }
 
 func (c *Convergence) reset(ctx *gin.Context) {
@@ -112,7 +109,7 @@ func (c *Convergence) reset(ctx *gin.Context) {
 
 func (c *Convergence) processBody(body string) template.HTML {
 	body = strings.Replace(body, "/wiki/display/", "/page/", -1)
-	body = strings.Replace(body, "/wiki/download/attachments/", "/download/", -1)
+	body = strings.Replace(body, "/wiki/download/", "/download/", -1)
 	return template.HTML(body)
 }
 

@@ -174,15 +174,15 @@ func (c *Confluence) GetPageByTitle(key, title string) (*Page, error) {
 	return page, nil
 }
 
-func (c *Confluence) GetAttachment(id, file, version, date, api string) (*Attachment, error) {
-	cacheKey := id + "-" + file + "-" + date
+func (c *Confluence) GetDownload(typ, id, file, version, date, api string) (*Attachment, error) {
+	cacheKey := typ + id + file + version + date + api
 
 	if value, ok := c.attachmentCache.Get(cacheKey); ok {
 		attachment := value.(*Attachment)
 		return attachment, nil
 	}
 
-	res, buf, errs := c.client.Get(c.BaseURL+"wiki/download/attachments/"+id+"/"+file).
+	res, buf, errs := c.client.Get(c.BaseURL+"wiki/download/"+typ+"/"+id+"/"+file).
 		Set("Accept", "*/*").
 		Query("version="+version).
 		Query("modificationDate="+date).
