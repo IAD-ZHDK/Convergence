@@ -15,9 +15,9 @@ type Confluence struct {
 	Username string
 	Password string
 
-	contentCache    *cache.Cache
-	attachmentCache *cache.Cache
-	client          *gorequest.SuperAgent
+	contentCache  *cache.Cache
+	downloadCache *cache.Cache
+	client        *gorequest.SuperAgent
 }
 
 type Space struct {
@@ -33,7 +33,7 @@ type Page struct {
 	Body  string
 }
 
-type Attachment struct {
+type Download struct {
 	Data        []byte
 	ContentType string
 }
@@ -58,8 +58,7 @@ func (c *Confluence) GetSpaces() ([]*Space, error) {
 	cacheKey := "spaces"
 
 	if value, ok := c.contentCache.Get(cacheKey); ok {
-		spaces := value.([]*Space)
-		return spaces, nil
+		return value.([]*Space), nil
 	}
 
 	_, res, errs := c.client.Get(c.url("space")).
@@ -123,12 +122,11 @@ func (c *Confluence) GetSpace(key string) (*Space, error) {
 	return nil, ErrNotFound
 }
 
-func (c *Confluence) GetPageByTitle(key, title string) (*Page, error) {
+func (c *Confluence) GetPage(key, title string) (*Page, error) {
 	cacheKey := "page-" + key + "-" + title
 
 	if value, ok := c.contentCache.Get(cacheKey); ok {
-		page := value.(*Page)
-		return page, nil
+		return value.(*Page), nil
 	}
 
 	_, res, errs := c.client.Get(c.url("content")).
@@ -174,12 +172,11 @@ func (c *Confluence) GetPageByTitle(key, title string) (*Page, error) {
 	return page, nil
 }
 
-func (c *Confluence) GetDownload(typ, id, file, version, date, api string) (*Attachment, error) {
+func (c *Confluence) GetDownload(typ, id, file, version, date, api string) (*Download, error) {
 	cacheKey := typ + id + file + version + date + api
 
-	if value, ok := c.attachmentCache.Get(cacheKey); ok {
-		attachment := value.(*Attachment)
-		return attachment, nil
+	if value, ok := c.downloadCache.Get(cacheKey); ok {
+		return value.(*Download), nil
 	}
 
 	res, buf, errs := c.client.Get(c.BaseURL+"wiki/download/"+typ+"/"+id+"/"+file).
@@ -198,17 +195,17 @@ func (c *Confluence) GetDownload(typ, id, file, version, date, api string) (*Att
 		return nil, ErrNotFound
 	}
 
-	attachment := &Attachment{
+	download := &Download{
 		ContentType: res.Header.Get("Content-Type"),
 		Data:        buf,
 	}
 
-	c.attachmentCache.Set(cacheKey, attachment, cache.DefaultExpiration)
+	c.downloadCache.Set(cacheKey, download, cache.DefaultExpiration)
 
-	return attachment, nil
+	return download, nil
 }
 
 func (c *Confluence) Reset() {
 	c.contentCache = cache.New(30*time.Minute, time.Minute)
-	c.attachmentCache = cache.New(24*time.Hour, time.Hour)
+	c.downloadCache = cache.New(24*time.Hour, time.Hour)
 }

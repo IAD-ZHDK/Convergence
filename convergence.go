@@ -66,7 +66,7 @@ func (c *Convergence) page(ctx *gin.Context) {
 	key := ctx.Param("key")
 	title := ctx.Param("title")
 
-	page, err := c.Confluence.GetPageByTitle(key, title)
+	page, err := c.Confluence.GetPage(key, title)
 	if err != nil {
 		c.error(ctx, err)
 		return
