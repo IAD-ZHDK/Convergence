@@ -67,7 +67,11 @@ table td, table th {
 }
 
 table td p, table th p {
-    margin: 0;
+    margin: 7px 0 0 0;
+}
+
+table td p:first-child, table th p:first-child {
+    margin-top: 0;
 }
 
 table th {
