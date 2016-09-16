@@ -122,6 +122,45 @@ func (c *Confluence) GetSpace(key string) (*Space, error) {
 	return nil, ErrNotFound
 }
 
+func (c *Confluence) GetPageByID(key, id string) (*Page, error) {
+	cacheKey := "page-" + key + "-" + id
+
+	if value, ok := c.contentCache.Get(cacheKey); ok {
+		return value.(*Page), nil
+	}
+
+	_, res, errs := c.client.Get(c.url("content/"+id)).
+		Set("Accept", "application/json, */*").
+		Query("type=page").
+		Query("spaceKey="+key).
+		Query("expand=body.view").
+		SetBasicAuth(c.Username, c.Password).
+		End()
+
+	if len(errs) > 0 {
+		return nil, errs[0]
+	}
+
+	if len(res) == 0 {
+		return nil, fmt.Errorf("zero response")
+	}
+
+	obj, err := gabs.ParseJSON([]byte(res))
+	if err != nil {
+		return nil, err
+	}
+
+	page := &Page{}
+
+	page.ID = obj.Path("id").Data().(string)
+	page.Title = obj.Path("title").Data().(string)
+	page.Body = obj.Path("body.view.value").Data().(string)
+
+	c.contentCache.Set(cacheKey, page, cache.DefaultExpiration)
+
+	return page, nil
+}
+
 func (c *Confluence) GetPage(key, title string) (*Page, error) {
 	cacheKey := "page-" + key + "-" + title
 

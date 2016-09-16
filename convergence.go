@@ -2,12 +2,16 @@ package main
 
 import (
 	"fmt"
+	"html/template"
 	"net/http"
+	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"html/template"
 )
+
+var linkRegex = regexp.MustCompile(`"/wiki/pages/viewpage\.action\?pageId=(\d+)"`)
 
 type Convergence struct {
 	Confluence *Confluence
@@ -57,7 +61,7 @@ func (c *Convergence) space(ctx *gin.Context) {
 
 	ctx.HTML(http.StatusOK, "page.html", gin.H{
 		"Title": space.Name,
-		"Body":  c.processBody(space.Homepage.Body),
+		"Body":  c.processBody(space.Homepage.Body, key),
 		"Index": key,
 	})
 }
@@ -66,15 +70,27 @@ func (c *Convergence) page(ctx *gin.Context) {
 	key := ctx.Param("key")
 	title := ctx.Param("title")
 
-	page, err := c.Confluence.GetPage(key, title)
-	if err != nil {
-		c.error(ctx, err)
-		return
+	var err error
+	var page *Page
+	if _, err := strconv.Atoi(title); err == nil {
+		page, err = c.Confluence.GetPageByID(key, title)
+		if err != nil {
+			c.error(ctx, err)
+			return
+		}
+	}
+
+	if page == nil {
+		page, err = c.Confluence.GetPage(key, title)
+		if err != nil {
+			c.error(ctx, err)
+			return
+		}
 	}
 
 	ctx.HTML(http.StatusOK, "page.html", gin.H{
 		"Title": page.Title,
-		"Body":  c.processBody(page.Body),
+		"Body":  c.processBody(page.Body, key),
 		"Index": key,
 	})
 }
@@ -107,9 +123,14 @@ func (c *Convergence) reset(ctx *gin.Context) {
 	ctx.Redirect(http.StatusTemporaryRedirect, referer)
 }
 
-func (c *Convergence) processBody(body string) template.HTML {
+func (c *Convergence) processBody(body string, key string) template.HTML {
 	body = strings.Replace(body, "/wiki/display/", "/page/", -1)
 	body = strings.Replace(body, "/wiki/download/", "/download/", -1)
+
+	for _, match := range linkRegex.FindAllStringSubmatch(body, -1) {
+		body = strings.Replace(body, match[0], `"/page/`+key+`/`+match[1]+`"`, 1)
+	}
+
 	return template.HTML(body)
 }
 
