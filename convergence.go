@@ -26,21 +26,21 @@ func (c *Convergence) Run() error {
 	router.LoadHTMLGlob("templates/*")
 	router.Static("/assets", "./assets")
 
-	router.GET("/", c.root)
-	router.GET("/page/:key", c.space)
-	router.GET("/page/:key/:title", c.page)
-	router.GET("/download/:type/:id/:file", c.download)
-	router.GET("/reset", c.reset)
+	router.GET("/", c.viewRoot)
+	router.GET("/page/:key", c.viewSpace)
+	router.GET("/page/:key/:title", c.viewPage)
+	router.GET("/download/:type/:id/:file", c.handleDownload)
+	router.GET("/reset", c.handleReset)
 
-	router.NoRoute(c.notFound)
+	router.NoRoute(c.showNotFound)
 
 	return router.Run()
 }
 
-func (c *Convergence) root(ctx *gin.Context) {
+func (c *Convergence) viewRoot(ctx *gin.Context) {
 	spaces, err := c.Confluence.GetSpaces()
 	if err != nil {
-		c.error(ctx, err)
+		c.showError(ctx, err)
 		return
 	}
 
@@ -50,12 +50,12 @@ func (c *Convergence) root(ctx *gin.Context) {
 	})
 }
 
-func (c *Convergence) space(ctx *gin.Context) {
+func (c *Convergence) viewSpace(ctx *gin.Context) {
 	key := ctx.Param("key")
 
 	space, err := c.Confluence.GetSpace(key)
 	if err != nil {
-		c.error(ctx, err)
+		c.showError(ctx, err)
 		return
 	}
 
@@ -66,24 +66,25 @@ func (c *Convergence) space(ctx *gin.Context) {
 	})
 }
 
-func (c *Convergence) page(ctx *gin.Context) {
+func (c *Convergence) viewPage(ctx *gin.Context) {
 	key := ctx.Param("key")
 	title := ctx.Param("title")
 
 	var err error
 	var page *Page
+
 	if _, err := strconv.Atoi(title); err == nil {
 		page, err = c.Confluence.GetPageByID(key, title)
 		if err != nil {
-			c.error(ctx, err)
+			c.showError(ctx, err)
 			return
 		}
 	}
 
 	if page == nil {
-		page, err = c.Confluence.GetPage(key, title)
+		page, err = c.Confluence.GetPageByTitle(key, title)
 		if err != nil {
-			c.error(ctx, err)
+			c.showError(ctx, err)
 			return
 		}
 	}
@@ -95,7 +96,7 @@ func (c *Convergence) page(ctx *gin.Context) {
 	})
 }
 
-func (c *Convergence) download(ctx *gin.Context) {
+func (c *Convergence) handleDownload(ctx *gin.Context) {
 	typ := ctx.Param("type")
 	id := ctx.Param("id")
 	file := ctx.Param("file")
@@ -105,14 +106,14 @@ func (c *Convergence) download(ctx *gin.Context) {
 
 	download, err := c.Confluence.GetDownload(typ, id, file, version, date, api)
 	if err != nil {
-		c.error(ctx, err)
+		c.showError(ctx, err)
 		return
 	}
 
 	ctx.Data(200, download.ContentType, download.Data)
 }
 
-func (c *Convergence) reset(ctx *gin.Context) {
+func (c *Convergence) handleReset(ctx *gin.Context) {
 	c.Confluence.Reset()
 
 	referer := ctx.Request.Referer()
@@ -134,13 +135,11 @@ func (c *Convergence) processBody(body string, key string) template.HTML {
 	return template.HTML(body)
 }
 
-func (c *Convergence) error(ctx *gin.Context, err error) {
+func (c *Convergence) showError(ctx *gin.Context, err error) {
 	fmt.Printf("Error: %s\n", err.Error())
 
 	if err == ErrNotFound {
-		ctx.HTML(http.StatusNotFound, "404.html", gin.H{
-			"Title": "Not Found",
-		})
+		c.showNotFound(ctx)
 		return
 	}
 
@@ -149,7 +148,7 @@ func (c *Convergence) error(ctx *gin.Context, err error) {
 	})
 }
 
-func (c *Convergence) notFound(ctx *gin.Context) {
+func (c *Convergence) showNotFound(ctx *gin.Context) {
 	ctx.HTML(http.StatusNotFound, "404.html", gin.H{
 		"Title": "Not Found",
 	})

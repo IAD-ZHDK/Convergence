@@ -72,7 +72,7 @@ func (c *Confluence) GetSpaces() ([]*Space, error) {
 	}
 
 	if len(res) == 0 {
-		return nil, fmt.Errorf("zero response")
+		return nil, errors.New("zero response")
 	}
 
 	json, err := gabs.ParseJSON([]byte(res))
@@ -142,7 +142,7 @@ func (c *Confluence) GetPageByID(key, id string) (*Page, error) {
 	}
 
 	if len(res) == 0 {
-		return nil, fmt.Errorf("zero response")
+		return nil, errors.New("zero response")
 	}
 
 	obj, err := gabs.ParseJSON([]byte(res))
@@ -161,7 +161,7 @@ func (c *Confluence) GetPageByID(key, id string) (*Page, error) {
 	return page, nil
 }
 
-func (c *Confluence) GetPage(key, title string) (*Page, error) {
+func (c *Confluence) GetPageByTitle(key, title string) (*Page, error) {
 	cacheKey := "page-" + key + "-" + title
 
 	if value, ok := c.contentCache.Get(cacheKey); ok {
@@ -182,7 +182,7 @@ func (c *Confluence) GetPage(key, title string) (*Page, error) {
 	}
 
 	if len(res) == 0 {
-		return nil, fmt.Errorf("zero response")
+		return nil, errors.New("zero response")
 	}
 
 	json, err := gabs.ParseJSON([]byte(res))

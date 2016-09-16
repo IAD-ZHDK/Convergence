@@ -1,8 +1,6 @@
 package main
 
-import (
-	"os"
-)
+import "os"
 
 func main() {
 	confluence := NewConfluence()
@@ -13,8 +11,5 @@ func main() {
 	convergence := NewConvergence()
 	convergence.Confluence = confluence
 
-	err := convergence.Run()
-	if err != nil {
-		panic(err)
-	}
+	convergence.Run()
 }
