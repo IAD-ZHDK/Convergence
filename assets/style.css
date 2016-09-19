@@ -52,6 +52,7 @@ h3 {
 
 img {
     max-width: 800px;
+    border-radius: 3px;
 }
 
 table {
@@ -61,7 +62,7 @@ table {
 
 table td, table th {
     padding: 8px;
-    border: 1px solid black;
+    border: 1px solid #ddd;
     text-align: left;
     vertical-align: top;
 }
@@ -76,6 +77,10 @@ table td p:first-child, table th p:first-child {
 
 table th {
     background-color: #eee;
+}
+
+table th p {
+    margin: 0;
 }
 
 .footer {
