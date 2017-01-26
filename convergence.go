@@ -14,11 +14,13 @@ import (
 var linkRegex = regexp.MustCompile(`"/wiki/pages/viewpage\.action\?pageId=(\d+)"`)
 
 type Convergence struct {
-	Confluence *Confluence
+	confluence *Confluence
 }
 
-func NewConvergence() *Convergence {
-	return &Convergence{}
+func NewConvergence(confluence *Confluence) *Convergence {
+	return &Convergence{
+		confluence: confluence,
+	}
 }
 
 func (c *Convergence) Run() error {
@@ -38,7 +40,7 @@ func (c *Convergence) Run() error {
 }
 
 func (c *Convergence) viewRoot(ctx *gin.Context) {
-	spaces, err := c.Confluence.GetSpaces()
+	spaces, err := c.confluence.GetSpaces()
 	if err != nil {
 		c.showError(ctx, err)
 		return
@@ -53,7 +55,7 @@ func (c *Convergence) viewRoot(ctx *gin.Context) {
 func (c *Convergence) viewSpace(ctx *gin.Context) {
 	key := ctx.Param("key")
 
-	space, err := c.Confluence.GetSpace(key)
+	space, err := c.confluence.GetSpace(key)
 	if err != nil {
 		c.showError(ctx, err)
 		return
@@ -74,7 +76,7 @@ func (c *Convergence) viewPage(ctx *gin.Context) {
 	var page *Page
 
 	if _, err := strconv.Atoi(title); err == nil {
-		page, err = c.Confluence.GetPageByID(key, title)
+		page, err = c.confluence.GetPageByID(key, title)
 		if err != nil {
 			c.showError(ctx, err)
 			return
@@ -82,7 +84,7 @@ func (c *Convergence) viewPage(ctx *gin.Context) {
 	}
 
 	if page == nil {
-		page, err = c.Confluence.GetPageByTitle(key, title)
+		page, err = c.confluence.GetPageByTitle(key, title)
 		if err != nil {
 			c.showError(ctx, err)
 			return
@@ -104,7 +106,7 @@ func (c *Convergence) handleDownload(ctx *gin.Context) {
 	date := ctx.Query("modificationDate")
 	api := ctx.Query("api")
 
-	download, err := c.Confluence.GetDownload(typ, id, file, version, date, api)
+	download, err := c.confluence.GetDownload(typ, id, file, version, date, api)
 	if err != nil {
 		c.showError(ctx, err)
 		return
@@ -114,7 +116,7 @@ func (c *Convergence) handleDownload(ctx *gin.Context) {
 }
 
 func (c *Convergence) handleReset(ctx *gin.Context) {
-	c.Confluence.Reset()
+	c.confluence.Reset()
 
 	referer := ctx.Request.Referer()
 	if len(referer) <= 0 {
@@ -138,7 +140,7 @@ func (c *Convergence) processBody(body string, key string) template.HTML {
 func (c *Convergence) showError(ctx *gin.Context, err error) {
 	fmt.Printf("Error: %s\n", err.Error())
 
-	if err == ErrNotFound {
+	if err == errNotFound {
 		c.showNotFound(ctx)
 		return
 	}

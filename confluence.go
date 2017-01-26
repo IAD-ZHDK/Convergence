@@ -2,22 +2,13 @@ package main
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/Jeffail/gabs"
 	"github.com/parnurzeal/gorequest"
 	"github.com/patrickmn/go-cache"
 )
-
-type Confluence struct {
-	BaseURL  string
-	Username string
-	Password string
-
-	contentCache  *cache.Cache
-	downloadCache *cache.Cache
-	client        *gorequest.SuperAgent
-}
 
 type Space struct {
 	Key         string
@@ -37,11 +28,24 @@ type Download struct {
 	ContentType string
 }
 
-var ErrNotFound = errors.New("not found")
+var errNotFound = errors.New("not found")
 
-func NewConfluence() *Confluence {
+type Confluence struct {
+	baseURL  string
+	username string
+	password string
+
+	contentCache  *cache.Cache
+	downloadCache *cache.Cache
+	client        *gorequest.SuperAgent
+}
+
+func NewConfluence(baseURL, username, password string) *Confluence {
 	c := &Confluence{
-		client: gorequest.New(),
+		baseURL:  baseURL,
+		username: username,
+		password: password,
+		client:   gorequest.New(),
 	}
 
 	c.Reset()
@@ -50,7 +54,7 @@ func NewConfluence() *Confluence {
 }
 
 func (c *Confluence) url(path string) string {
-	return c.BaseURL + "wiki/rest/api/" + path
+	return c.baseURL + "wiki/rest/api/" + path
 }
 
 func (c *Confluence) GetSpaces() ([]*Space, error) {
@@ -63,7 +67,7 @@ func (c *Confluence) GetSpaces() ([]*Space, error) {
 	_, res, errs := c.client.Get(c.url("space")).
 		Set("Accept", "application/json, */*").
 		Query("expand=description.view,homepage.body.view").
-		SetBasicAuth(c.Username, c.Password).
+		SetBasicAuth(c.username, c.password).
 		End()
 
 	if len(errs) > 0 {
@@ -95,7 +99,7 @@ func (c *Confluence) GetSpaces() ([]*Space, error) {
 		space.Homepage = Page{
 			ID:    obj.Path("homepage.id").Data().(string),
 			Title: obj.Path("homepage.title").Data().(string),
-			Body:  obj.Path("homepage.body.view.value").Data().(string),
+			Body:  c.processBody(obj.Path("homepage.body.view.value").Data().(string)),
 		}
 
 		spaces[i] = space
@@ -118,7 +122,7 @@ func (c *Confluence) GetSpace(key string) (*Space, error) {
 		}
 	}
 
-	return nil, ErrNotFound
+	return nil, errNotFound
 }
 
 func (c *Confluence) GetPageByID(key, id string) (*Page, error) {
@@ -133,7 +137,7 @@ func (c *Confluence) GetPageByID(key, id string) (*Page, error) {
 		Query("type=page").
 		Query("spaceKey="+key).
 		Query("expand=body.view").
-		SetBasicAuth(c.Username, c.Password).
+		SetBasicAuth(c.username, c.password).
 		End()
 
 	if len(errs) > 0 {
@@ -153,7 +157,7 @@ func (c *Confluence) GetPageByID(key, id string) (*Page, error) {
 
 	page.ID = obj.Path("id").Data().(string)
 	page.Title = obj.Path("title").Data().(string)
-	page.Body = obj.Path("body.view.value").Data().(string)
+	page.Body = c.processBody(obj.Path("body.view.value").Data().(string))
 
 	c.contentCache.Set(cacheKey, page, cache.DefaultExpiration)
 
@@ -173,7 +177,7 @@ func (c *Confluence) GetPageByTitle(key, title string) (*Page, error) {
 		Query("type=page").
 		Query("spaceKey="+key).
 		Query("expand=body.view").
-		SetBasicAuth(c.Username, c.Password).
+		SetBasicAuth(c.username, c.password).
 		End()
 
 	if len(errs) > 0 {
@@ -195,7 +199,7 @@ func (c *Confluence) GetPageByTitle(key, title string) (*Page, error) {
 	}
 
 	if len(results) == 0 {
-		return nil, ErrNotFound
+		return nil, errNotFound
 	}
 
 	obj := results[0]
@@ -203,7 +207,7 @@ func (c *Confluence) GetPageByTitle(key, title string) (*Page, error) {
 
 	page.ID = obj.Path("id").Data().(string)
 	page.Title = obj.Path("title").Data().(string)
-	page.Body = obj.Path("body.view.value").Data().(string)
+	page.Body = c.processBody(obj.Path("body.view.value").Data().(string))
 
 	c.contentCache.Set(cacheKey, page, cache.DefaultExpiration)
 
@@ -217,12 +221,12 @@ func (c *Confluence) GetDownload(typ, id, file, version, date, api string) (*Dow
 		return value.(*Download), nil
 	}
 
-	res, buf, errs := c.client.Get(c.BaseURL+"wiki/download/"+typ+"/"+id+"/"+file).
+	res, buf, errs := c.client.Get(c.baseURL+"wiki/download/"+typ+"/"+id+"/"+file).
 		Set("Accept", "*/*").
 		Query("version="+version).
 		Query("modificationDate="+date).
 		Query("api="+api).
-		SetBasicAuth(c.Username, c.Password).
+		SetBasicAuth(c.username, c.password).
 		EndBytes()
 
 	if len(errs) > 0 {
@@ -230,7 +234,7 @@ func (c *Confluence) GetDownload(typ, id, file, version, date, api string) (*Dow
 	}
 
 	if len(buf) == 0 {
-		return nil, ErrNotFound
+		return nil, errNotFound
 	}
 
 	download := &Download{
@@ -246,4 +250,8 @@ func (c *Confluence) GetDownload(typ, id, file, version, date, api string) (*Dow
 func (c *Confluence) Reset() {
 	c.contentCache = cache.New(30*time.Minute, time.Minute)
 	c.downloadCache = cache.New(24*time.Hour, time.Hour)
+}
+
+func (c *Confluence) processBody(body string) string {
+	return strings.Replace(body, c.baseURL, "/", -1)
 }
