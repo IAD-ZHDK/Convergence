@@ -1,1 +1,1 @@
-web: convergence
+web: ./bin/convergence
