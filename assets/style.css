@@ -113,7 +113,7 @@ table th p {
 }
 
 .cv-missing {
-    text-decoration: line-through;
+    color: #999;
 }
 
 h1.cv-title {
