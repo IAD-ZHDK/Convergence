@@ -41,7 +41,7 @@ func (c *Convergence) Run() error {
 
 func (c *Convergence) viewRoot(ctx *gin.Context) {
 	ctx.HTML(http.StatusOK, "index.html", gin.H{
-		"Title":  "IAD Wiki",
+		"Title": "IAD Wiki",
 	})
 }
 

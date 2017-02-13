@@ -1,5 +1,5 @@
-hash: db5ed9dafa5c794d1d1ed94e9230fce78c3e45ba0a1973d89bc31c5fa6008ae1
-updated: 2017-01-26T12:01:38.727202206+01:00
+hash: d37d28dc7b0a4dd009923bc8c39e3fb619c3a9898fca0d8aae912f061bb30be4
+updated: 2017-02-13T18:41:25.209483632+01:00
 imports:
 - name: github.com/gin-gonic/gin
   version: e2212d40c62a98b388a5eb48ecbdcf88534688ba
@@ -16,6 +16,8 @@ imports:
   version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
 - name: github.com/mattn/go-isatty
   version: ae0b1f8f8004be68d791a576e3d8e7648ab41449
+- name: github.com/microcosm-cc/bluemonday
+  version: e79763773ab6222ca1d5a7cbd9d62d83c1f77081
 - name: github.com/moul/http2curl
   version: 1812aee76a1ce98d604a44200c6a23c689b17a89
 - name: github.com/parnurzeal/gorequest
@@ -26,9 +28,11 @@ imports:
   version: f315505cf3349909cdf013ea56690da34e96a451
   subpackages:
   - context
+  - html
+  - html/atom
   - publicsuffix
 - name: gopkg.in/go-playground/validator.v8
   version: c193cecd124b5cc722d7ee5538e945bdb3348435
 - name: gopkg.in/yaml.v2
-  version: 4c78c975fe7c825c6d1466c42be594d1d6f3aba6
+  version: a3f3340b5840cee44f372bddb5880fcbc419b46a
 testImports: []

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Jeffail/gabs"
+	"github.com/microcosm-cc/bluemonday"
 	"github.com/parnurzeal/gorequest"
 	"github.com/patrickmn/go-cache"
 )
@@ -38,15 +39,20 @@ type Confluence struct {
 	contentCache  *cache.Cache
 	downloadCache *cache.Cache
 	client        *gorequest.SuperAgent
+	sanitizer     *bluemonday.Policy
 }
 
 func NewConfluence(baseURL, username, password string) *Confluence {
 	c := &Confluence{
-		baseURL:  baseURL,
-		username: username,
-		password: password,
-		client:   gorequest.New(),
+		baseURL:   baseURL,
+		username:  username,
+		password:  password,
+		client:    gorequest.New(),
+		sanitizer: bluemonday.UGCPolicy(),
 	}
+
+	c.sanitizer.RequireNoFollowOnLinks(false)
+	c.sanitizer.RequireNoFollowOnFullyQualifiedLinks(true)
 
 	c.Reset()
 
@@ -99,7 +105,11 @@ func (c *Confluence) GetSpaces() ([]*Space, error) {
 		space.Homepage = Page{
 			ID:    obj.Path("homepage.id").Data().(string),
 			Title: obj.Path("homepage.title").Data().(string),
-			Body:  c.processBody(obj.Path("homepage.body.view.value").Data().(string)),
+		}
+
+		space.Homepage.Body, err = c.processBody(obj.Path("homepage.body.view.value").Data().(string))
+		if err != nil {
+			return nil, err
 		}
 
 		spaces[i] = space
@@ -157,7 +167,10 @@ func (c *Confluence) GetPageByID(key, id string) (*Page, error) {
 
 	page.ID = obj.Path("id").Data().(string)
 	page.Title = obj.Path("title").Data().(string)
-	page.Body = c.processBody(obj.Path("body.view.value").Data().(string))
+	page.Body, err = c.processBody(obj.Path("body.view.value").Data().(string))
+	if err != nil {
+		return nil, err
+	}
 
 	c.contentCache.Set(cacheKey, page, cache.DefaultExpiration)
 
@@ -207,7 +220,10 @@ func (c *Confluence) GetPageByTitle(key, title string) (*Page, error) {
 
 	page.ID = obj.Path("id").Data().(string)
 	page.Title = obj.Path("title").Data().(string)
-	page.Body = c.processBody(obj.Path("body.view.value").Data().(string))
+	page.Body, err = c.processBody(obj.Path("body.view.value").Data().(string))
+	if err != nil {
+		return nil, err
+	}
 
 	c.contentCache.Set(cacheKey, page, cache.DefaultExpiration)
 
@@ -252,6 +268,7 @@ func (c *Confluence) Reset() {
 	c.downloadCache = cache.New(24*time.Hour, time.Hour)
 }
 
-func (c *Confluence) processBody(body string) string {
-	return strings.Replace(body, c.baseURL, "/", -1)
+func (c *Confluence) processBody(body string) (string, error) {
+	body = c.sanitizer.Sanitize(body)
+	return strings.Replace(body, c.baseURL, "/", -1), nil
 }
