@@ -16,22 +16,19 @@ a:hover {
 
 .cv-page {
     max-width: 800px;
-    margin: 0 auto;
-    margin-top: 100px;
+    margin: 100px auto 0;
 }
 
 .cv-nav {
     list-style: none;
-    margin: 0;
+    margin: 0 0 50px;
     padding: 0;
-    margin-bottom: 50px;
 }
 
 .cv-nav li {
     display: inline-block;
-    margin: 0;
+    margin: 0 20px 0 0;
     padding: 0;
-    margin-right: 20px;
 }
 
 h1, h2, h3, h4, h5, h6, strong {
