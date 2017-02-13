@@ -40,15 +40,8 @@ func (c *Convergence) Run() error {
 }
 
 func (c *Convergence) viewRoot(ctx *gin.Context) {
-	spaces, err := c.confluence.GetSpaces()
-	if err != nil {
-		c.showError(ctx, err)
-		return
-	}
-
 	ctx.HTML(http.StatusOK, "index.html", gin.H{
 		"Title":  "IAD Wiki",
-		"Spaces": spaces,
 	})
 }
 

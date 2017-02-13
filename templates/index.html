@@ -1,13 +1,69 @@
 {{template "header.html" .}}
 
-<h1 class="cv-title">IAD Wiki</h1>
-<p><strong>Welcome to the IAD Wiki.</strong></p>
-<p>On this Wiki you will find information related to IAD courses and available materials.</p>
+<h1 class="cv-title">Interaction Design Wiki</h1>
 
-<ul>
-  {{range .Spaces}}
-  <li><a href="/page/{{.Key}}">{{.Name}}</a></li>
-  {{end}}
-</ul>
+<img src="/assets/main.png">
+
+<h2>Bachelor Courses</h2>
+
+<div class="cv-row">
+  <div class="cv-block">
+    <h3 class="cv-category">1st Semester</h3>
+    <ul>
+      <li><a href="/page/OE">Object Experience</a></li>
+      <li><a href="/page/ADB">Audio-Visual Design Basics</a></li>
+      <li><a href="/page/PB">Programming Basics</a></li>
+      <li><span class="cv-missing">Graphic Design Basics</span></li>
+      <li><a href="/page/DF">Digital Fabrication</a></li>
+    </ul>
+  </div>
+
+  <div class="cv-block">
+    <h3 class="cv-category">2nd Semester</h3>
+    <ul>
+      <li><span class="cv-missing">Interaction Design Process</span></li>
+      <li><span class="cv-missing">Basic GUI</span></li>
+    </ul>
+
+    <h3 class="cv-category cv-margin">3rd Semester</h3>
+    <ul>
+      <li><a href="/page/PCL">Physical Computing</a></li>
+      <li><span class="cv-missing">Interactive Visualization</span></li>
+      <li><span class="cv-missing">Soft Architecture</span></li>
+      <li><a href="/page/SID">Sonic Interaction Design</a></li>
+    </ul>
+  </div>
+
+  <div class="cv-block">
+    <h3 class="cv-category">4th Semester</h3>
+    <ul>
+      <li><span class="cv-missing">Spatial Interaction</span></li>
+      <li><a href="/page/SD">Service Design</a></li>
+    </ul>
+
+    <h3 class="cv-category cv-margin">5th Semester</h3>
+    <ul>
+      <li><span class="cv-missing">Mobile User Interface</span></li>
+      <li><span class="cv-missing">Embodied Interaction</span></li>
+    </ul>
+
+    <h3 class="cv-category cv-margin">6th Semester</h3>
+    <ul>
+      <li><span class="cv-missing">Bachelor Thesis</span></li>
+    </ul>
+  </div>
+</div>
+
+<h2>Knowledge Base</h2>
+
+<div class="cv-row">
+  <div class="cv-block">
+    <ul>
+      <li><a href="/page/BSH">Study Guide</a></li>
+      <li><a href="/page/CP">Web Development</a></li>
+      <li><a href="/page/DS">Design Studio</a></li>
+    </ul>
+  </div>
+</div>
 
 {{template "footer.html" .}}
