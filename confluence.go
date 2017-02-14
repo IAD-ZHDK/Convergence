@@ -258,6 +258,8 @@ func (c *Confluence) Reset() {
 	c.downloadCache = cache.New(24*time.Hour, time.Hour)
 }
 
+// TODO: Remove empty spans?
+
 func (c *Confluence) processBody(body string) string {
 	body = strings.Replace(body, "Expand source", "", -1)
 	body = c.sanitizer.Sanitize(body)
