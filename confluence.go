@@ -105,11 +105,7 @@ func (c *Confluence) GetSpaces() ([]*Space, error) {
 		space.Homepage = Page{
 			ID:    obj.Path("homepage.id").Data().(string),
 			Title: obj.Path("homepage.title").Data().(string),
-		}
-
-		space.Homepage.Body, err = c.processBody(obj.Path("homepage.body.view.value").Data().(string))
-		if err != nil {
-			return nil, err
+			Body:  c.processBody(obj.Path("homepage.body.view.value").Data().(string)),
 		}
 
 		spaces[i] = space
@@ -167,10 +163,7 @@ func (c *Confluence) GetPageByID(key, id string) (*Page, error) {
 
 	page.ID = obj.Path("id").Data().(string)
 	page.Title = obj.Path("title").Data().(string)
-	page.Body, err = c.processBody(obj.Path("body.view.value").Data().(string))
-	if err != nil {
-		return nil, err
-	}
+	page.Body = c.processBody(obj.Path("body.view.value").Data().(string))
 
 	c.contentCache.Set(cacheKey, page, cache.DefaultExpiration)
 
@@ -220,10 +213,7 @@ func (c *Confluence) GetPageByTitle(key, title string) (*Page, error) {
 
 	page.ID = obj.Path("id").Data().(string)
 	page.Title = obj.Path("title").Data().(string)
-	page.Body, err = c.processBody(obj.Path("body.view.value").Data().(string))
-	if err != nil {
-		return nil, err
-	}
+	page.Body = c.processBody(obj.Path("body.view.value").Data().(string))
 
 	c.contentCache.Set(cacheKey, page, cache.DefaultExpiration)
 
@@ -268,7 +258,7 @@ func (c *Confluence) Reset() {
 	c.downloadCache = cache.New(24*time.Hour, time.Hour)
 }
 
-func (c *Confluence) processBody(body string) (string, error) {
+func (c *Confluence) processBody(body string) string {
 	body = c.sanitizer.Sanitize(body)
-	return strings.Replace(body, c.baseURL, "/", -1), nil
+	return strings.Replace(body, c.baseURL, "/", -1)
 }
