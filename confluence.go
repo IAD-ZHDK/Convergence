@@ -259,6 +259,7 @@ func (c *Confluence) Reset() {
 }
 
 func (c *Confluence) processBody(body string) string {
+	body = strings.Replace(body, "Expand source", "", -1)
 	body = c.sanitizer.Sanitize(body)
 	return strings.Replace(body, c.baseURL, "/", -1)
 }
