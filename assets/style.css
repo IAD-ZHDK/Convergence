@@ -159,3 +159,9 @@ h3.cv-category.cv-margin {
 .cv-footer .cv-reset {
     float: right;
 }
+
+/* Confluence specific */
+
+.table-wrap {
+    overflow: scroll;
+}
