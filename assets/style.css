@@ -5,10 +5,11 @@ body {
     font-size: 18px;
     line-height: 1.5;
     font-family: 'Source Sans Pro', 'Helvetica', 'Arial', sans-serif;
+    color: black;
 }
 
 a {
-    color: black;
+    color: inherit;
     text-decoration: underline;
 }
 
@@ -87,15 +88,16 @@ table th p {
 }
 
 .cv-nav {
-    list-style: none;
+    color: #bbb;
     margin: 0 0 50px;
-    padding: 0;
 }
 
-.cv-nav li {
-    display: inline-block;
-    margin: 0 20px 0 0;
-    padding: 0;
+.cv-nav a {
+    text-decoration: none;
+}
+
+.cv-nav a:hover {
+    text-decoration: underline;
 }
 
 .cv-row {
@@ -147,7 +149,6 @@ h3.cv-category.cv-margin {
 }
 
 .cv-footer a {
-    color: #bbb;
     text-decoration: none;
 }
 

@@ -58,6 +58,7 @@ func (c *Convergence) viewSpace(ctx *gin.Context) {
 		"Title": space.Name,
 		"Body":  c.processBody(space.Homepage.Body, key),
 		"Index": key,
+		"Space": space.Name,
 	})
 }
 
@@ -67,6 +68,12 @@ func (c *Convergence) viewPage(ctx *gin.Context) {
 
 	var err error
 	var page *Page
+
+	space, err := c.confluence.GetSpace(key)
+	if err != nil {
+		c.showError(ctx, err)
+		return
+	}
 
 	if _, err := strconv.Atoi(title); err == nil {
 		page, err = c.confluence.GetPageByID(key, title)
@@ -88,6 +95,7 @@ func (c *Convergence) viewPage(ctx *gin.Context) {
 		"Title": page.Title,
 		"Body":  c.processBody(page.Body, key),
 		"Index": key,
+		"Space": space.Name,
 	})
 }
 
