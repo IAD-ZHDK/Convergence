@@ -165,3 +165,33 @@ h3.cv-category.cv-margin {
 .table-wrap {
     overflow: scroll;
 }
+
+/* Mobile Overrides */
+
+@media only screen and (max-width: 800px) {
+    body {
+        margin: 25px;
+    }
+
+    img {
+        width: 100%;
+    }
+
+    .cv-page {
+        max-width: 800px;
+        margin: 0;
+    }
+
+    .cv-nav {
+        margin-bottom: 25px;
+    }
+
+    .cv-block {
+        float: none;
+        width: 100%;
+    }
+
+    .cv-footer {
+        margin-top: 50px;
+    }
+}
