@@ -122,7 +122,7 @@ table th p {
 }
 
 .cv-missing {
-    color: #999;
+    color: #bbb;
 }
 
 h1.cv-title {
@@ -143,10 +143,18 @@ h3.cv-category.cv-margin {
 
 .cv-footer {
     margin-top: 100px;
-    color: #aaa;
+    color: #bbb;
+}
+
+.cv-footer a {
+    color: #bbb;
+    text-decoration: none;
+}
+
+.cv-footer a:hover {
+    text-decoration: underline;
 }
 
 .cv-footer .cv-reset {
     float: right;
-    color: #ddd;
 }
