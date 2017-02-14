@@ -53,6 +53,7 @@ func NewConfluence(baseURL, username, password string) *Confluence {
 
 	c.sanitizer.RequireNoFollowOnLinks(false)
 	c.sanitizer.RequireNoFollowOnFullyQualifiedLinks(true)
+	c.sanitizer.AllowAttrs("class").Globally()
 
 	c.Reset()
 
