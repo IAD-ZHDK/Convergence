@@ -2,7 +2,7 @@ package main
 
 import (
 	"errors"
-	"io"
+	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -31,6 +31,12 @@ type Download struct {
 	ContentType string
 }
 
+type Response struct {
+	Status int
+	Data   []byte
+	Header map[string][]string
+}
+
 var errNotFound = errors.New("not found")
 
 type Confluence struct {
@@ -40,6 +46,7 @@ type Confluence struct {
 
 	contentCache  *cache.Cache
 	downloadCache *cache.Cache
+	responseCache *cache.Cache
 	client        *gorequest.SuperAgent
 	sanitizer     *bluemonday.Policy
 }
@@ -224,6 +231,8 @@ func (c *Confluence) GetPageByTitle(key, title string) (*Page, error) {
 }
 
 func (c *Confluence) GetDownload(typ, id, file, version, date, api string) (*Download, error) {
+	// TODO: Delegate to proxy?
+
 	cacheKey := typ + id + file + version + date + api
 
 	if value, ok := c.downloadCache.Get(cacheKey); ok {
@@ -259,6 +268,47 @@ func (c *Confluence) GetDownload(typ, id, file, version, date, api string) (*Dow
 func (c *Confluence) Reset() {
 	c.contentCache = cache.New(30*time.Minute, time.Minute)
 	c.downloadCache = cache.New(24*time.Hour, time.Hour)
+	c.responseCache = cache.New(24*time.Hour, time.Hour)
+}
+
+func (c *Confluence) getResponse(r *http.Request) (*Response, error) {
+	// check cache
+	if value, ok := c.responseCache.Get(r.URL.RequestURI()); ok {
+		return value.(*Response), nil
+	}
+
+	// make new request
+	r2, err := http.NewRequest("GET", c.baseURL+r.URL.RequestURI(), r.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	// add authentication
+	r2.SetBasicAuth(c.username, c.password)
+
+	// make request
+	res, err := http.DefaultClient.Do(r2)
+	if err != nil {
+		return nil, err
+	}
+
+	// read full body
+	buf, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	// create response
+	response := &Response{
+		Status: res.StatusCode,
+		Data:   buf,
+		Header: res.Header,
+	}
+
+	// cache it
+	c.responseCache.Set(r.URL.RequestURI(), response, cache.DefaultExpiration)
+
+	return response, nil
 }
 
 func (c *Confluence) Proxy() http.Handler {
@@ -269,22 +319,10 @@ func (c *Confluence) Proxy() http.Handler {
 			return
 		}
 
-		// prepare uri
-		url := c.baseURL + r.URL.RequestURI()
-
-		// make new request
-		r2, err := http.NewRequest("GET", url, r.Body)
+		// get response
+		res, err := c.getResponse(r)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		// add authentication
-		r2.SetBasicAuth(c.username, c.password)
-
-		// make request
-		res, err := http.DefaultClient.Do(r2)
-		if err != nil {
+			println(err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
@@ -292,15 +330,13 @@ func (c *Confluence) Proxy() http.Handler {
 		// add headers
 		for key, values := range res.Header {
 			for _, value := range values {
-				res.Header.Add(key, value)
+				w.Header().Add(key, value)
 			}
 		}
 
-		// write head
-		w.WriteHeader(res.StatusCode)
-
-		// write body
-		io.Copy(w, res.Body)
+		// write head and body
+		w.WriteHeader(res.Status)
+		w.Write(res.Data)
 	})
 }
 
