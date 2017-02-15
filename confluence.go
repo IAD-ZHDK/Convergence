@@ -298,8 +298,6 @@ func (c *Confluence) Reset() {
 	c.responseCache = cache.New(24*time.Hour, time.Hour)
 }
 
-// TODO: Remove empty spans?
-
 func (c *Confluence) processBody(body string) string {
 	body = c.sanitizer.Sanitize(body)
 	return strings.Replace(body, c.baseURL, "/", -1)
