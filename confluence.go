@@ -301,8 +301,6 @@ func (c *Confluence) Reset() {
 // TODO: Remove empty spans?
 
 func (c *Confluence) processBody(body string) string {
-	// TODO: Fix this via CSS.
-	body = strings.Replace(body, "Expand source", "", -1)
 	body = c.sanitizer.Sanitize(body)
 	return strings.Replace(body, c.baseURL, "/", -1)
 }

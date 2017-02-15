@@ -166,6 +166,10 @@ h3.cv-category.cv-margin {
     overflow: scroll;
 }
 
+.expand-control {
+    display: none;
+}
+
 /* Mobile Overrides */
 
 @media only screen and (max-width: 800px) {
