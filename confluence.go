@@ -2,6 +2,8 @@ package main
 
 import (
 	"errors"
+	"io"
+	"net/http"
 	"strings"
 	"time"
 
@@ -257,6 +259,49 @@ func (c *Confluence) GetDownload(typ, id, file, version, date, api string) (*Dow
 func (c *Confluence) Reset() {
 	c.contentCache = cache.New(30*time.Minute, time.Minute)
 	c.downloadCache = cache.New(24*time.Hour, time.Hour)
+}
+
+func (c *Confluence) Proxy() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// only proxy get requests
+		if r.Method != "GET" {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		// prepare uri
+		url := c.baseURL + r.URL.RequestURI()
+
+		// make new request
+		r2, err := http.NewRequest("GET", url, r.Body)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		// add authentication
+		r2.SetBasicAuth(c.username, c.password)
+
+		// make request
+		res, err := http.DefaultClient.Do(r2)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		// add headers
+		for key, values := range res.Header {
+			for _, value := range values {
+				res.Header.Add(key, value)
+			}
+		}
+
+		// write head
+		w.WriteHeader(res.StatusCode)
+
+		// write body
+		io.Copy(w, res.Body)
+	})
 }
 
 // TODO: Remove empty spans?

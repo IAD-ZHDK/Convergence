@@ -15,26 +15,27 @@ var linkRegex = regexp.MustCompile(`"/wiki/pages/viewpage\.action\?pageId=(\d+)"
 
 type Convergence struct {
 	confluence *Confluence
+	proxy      http.Handler
 }
 
 func NewConvergence(confluence *Confluence) *Convergence {
 	return &Convergence{
 		confluence: confluence,
+		proxy:      confluence.Proxy(),
 	}
 }
 
 func (c *Convergence) Run() error {
 	router := gin.Default()
 	router.LoadHTMLGlob("templates/*")
-	router.Static("/assets", "./assets")
 
+	router.Static("/assets", "./assets")
 	router.GET("/", c.viewRoot)
 	router.GET("/page/:key", c.viewSpace)
 	router.GET("/page/:key/:title", c.viewPage)
 	router.GET("/download/:type/:id/:file", c.handleDownload)
 	router.GET("/reset", c.handleReset)
-
-	router.NoRoute(c.showNotFound)
+	router.NoRoute(c.handleProxy)
 
 	return router.Run()
 }
@@ -119,12 +120,22 @@ func (c *Convergence) handleDownload(ctx *gin.Context) {
 func (c *Convergence) handleReset(ctx *gin.Context) {
 	c.confluence.Reset()
 
-	referer := ctx.Request.Referer()
-	if len(referer) <= 0 {
-		referer = "/"
+	referrer := ctx.Request.Referer()
+	if len(referrer) <= 0 {
+		referrer = "/"
 	}
 
-	ctx.Redirect(http.StatusTemporaryRedirect, referer)
+	ctx.Redirect(http.StatusTemporaryRedirect, referrer)
+}
+
+func (c *Convergence) handleProxy(ctx *gin.Context) {
+	// proxy request if begins with /wiki
+	if strings.HasPrefix(ctx.Request.URL.Path, "/wiki") {
+		c.proxy.ServeHTTP(ctx.Writer, ctx.Request)
+		return
+	}
+
+	c.showNotFound(ctx)
 }
 
 func (c *Convergence) processBody(body string, key string) template.HTML {
