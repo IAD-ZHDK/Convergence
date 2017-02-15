@@ -33,7 +33,6 @@ func (c *Convergence) Run() error {
 	router.GET("/", c.viewRoot)
 	router.GET("/page/:key", c.viewSpace)
 	router.GET("/page/:key/:title", c.viewPage)
-	router.GET("/download/:type/:id/:file", c.handleDownload)
 	router.GET("/reset", c.handleReset)
 	router.NoRoute(c.handleProxy)
 
@@ -100,23 +99,6 @@ func (c *Convergence) viewPage(ctx *gin.Context) {
 	})
 }
 
-func (c *Convergence) handleDownload(ctx *gin.Context) {
-	typ := ctx.Param("type")
-	id := ctx.Param("id")
-	file := ctx.Param("file")
-	version := ctx.Query("version")
-	date := ctx.Query("modificationDate")
-	api := ctx.Query("api")
-
-	download, err := c.confluence.GetDownload(typ, id, file, version, date, api)
-	if err != nil {
-		c.showError(ctx, err)
-		return
-	}
-
-	ctx.Data(200, download.ContentType, download.Data)
-}
-
 func (c *Convergence) handleReset(ctx *gin.Context) {
 	c.confluence.Reset()
 
@@ -140,7 +122,6 @@ func (c *Convergence) handleProxy(ctx *gin.Context) {
 
 func (c *Convergence) processBody(body string, key string) template.HTML {
 	body = strings.Replace(body, "/wiki/display/", "/page/", -1)
-	body = strings.Replace(body, "/wiki/download/", "/download/", -1)
 
 	for _, match := range linkRegex.FindAllStringSubmatch(body, -1) {
 		body = strings.Replace(body, match[0], `"/page/`+key+`/`+match[1]+`"`, 1)
@@ -152,7 +133,7 @@ func (c *Convergence) processBody(body string, key string) template.HTML {
 func (c *Convergence) showError(ctx *gin.Context, err error) {
 	fmt.Printf("Error: %s\n", err.Error())
 
-	if err == errNotFound {
+	if err == ErrNotFound {
 		c.showNotFound(ctx)
 		return
 	}

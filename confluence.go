@@ -26,18 +26,13 @@ type Page struct {
 	Body  string
 }
 
-type Download struct {
-	Data        []byte
-	ContentType string
-}
-
 type Response struct {
 	Status int
 	Data   []byte
 	Header map[string][]string
 }
 
-var errNotFound = errors.New("not found")
+var ErrNotFound = errors.New("not found")
 
 type Confluence struct {
 	baseURL  string
@@ -45,7 +40,6 @@ type Confluence struct {
 	password string
 
 	contentCache  *cache.Cache
-	downloadCache *cache.Cache
 	responseCache *cache.Cache
 	client        *gorequest.SuperAgent
 	sanitizer     *bluemonday.Policy
@@ -138,7 +132,7 @@ func (c *Confluence) GetSpace(key string) (*Space, error) {
 		}
 	}
 
-	return nil, errNotFound
+	return nil, ErrNotFound
 }
 
 func (c *Confluence) GetPageByID(key, id string) (*Page, error) {
@@ -215,7 +209,7 @@ func (c *Confluence) GetPageByTitle(key, title string) (*Page, error) {
 	}
 
 	if len(results) == 0 {
-		return nil, errNotFound
+		return nil, ErrNotFound
 	}
 
 	obj := results[0]
@@ -230,48 +224,7 @@ func (c *Confluence) GetPageByTitle(key, title string) (*Page, error) {
 	return page, nil
 }
 
-func (c *Confluence) GetDownload(typ, id, file, version, date, api string) (*Download, error) {
-	// TODO: Delegate to proxy?
-
-	cacheKey := typ + id + file + version + date + api
-
-	if value, ok := c.downloadCache.Get(cacheKey); ok {
-		return value.(*Download), nil
-	}
-
-	res, buf, errs := c.client.Get(c.baseURL+"wiki/download/"+typ+"/"+id+"/"+file).
-		Set("Accept", "*/*").
-		Query("version="+version).
-		Query("modificationDate="+date).
-		Query("api="+api).
-		SetBasicAuth(c.username, c.password).
-		EndBytes()
-
-	if len(errs) > 0 {
-		return nil, errs[0]
-	}
-
-	if len(buf) == 0 {
-		return nil, errNotFound
-	}
-
-	download := &Download{
-		ContentType: res.Header.Get("Content-Type"),
-		Data:        buf,
-	}
-
-	c.downloadCache.Set(cacheKey, download, cache.DefaultExpiration)
-
-	return download, nil
-}
-
-func (c *Confluence) Reset() {
-	c.contentCache = cache.New(30*time.Minute, time.Minute)
-	c.downloadCache = cache.New(24*time.Hour, time.Hour)
-	c.responseCache = cache.New(24*time.Hour, time.Hour)
-}
-
-func (c *Confluence) getResponse(r *http.Request) (*Response, error) {
+func (c *Confluence) GetResponse(r *http.Request) (*Response, error) {
 	// check cache
 	if value, ok := c.responseCache.Get(r.URL.RequestURI()); ok {
 		return value.(*Response), nil
@@ -320,7 +273,7 @@ func (c *Confluence) Proxy() http.Handler {
 		}
 
 		// get response
-		res, err := c.getResponse(r)
+		res, err := c.GetResponse(r)
 		if err != nil {
 			println(err.Error())
 			w.WriteHeader(http.StatusInternalServerError)
@@ -340,9 +293,15 @@ func (c *Confluence) Proxy() http.Handler {
 	})
 }
 
+func (c *Confluence) Reset() {
+	c.contentCache = cache.New(30*time.Minute, time.Minute)
+	c.responseCache = cache.New(24*time.Hour, time.Hour)
+}
+
 // TODO: Remove empty spans?
 
 func (c *Confluence) processBody(body string) string {
+	// TODO: Fix this via CSS.
 	body = strings.Replace(body, "Expand source", "", -1)
 	body = c.sanitizer.Sanitize(body)
 	return strings.Replace(body, c.baseURL, "/", -1)
