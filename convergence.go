@@ -29,10 +29,10 @@ func (c *Convergence) Run() error {
 	router := gin.Default()
 	router.LoadHTMLGlob("templates/*")
 
-	router.Static("/assets", "./assets")
 	router.GET("/", c.viewRoot)
 	router.GET("/page/:key", c.viewSpace)
 	router.GET("/page/:key/:title", c.viewPage)
+	router.Static("/assets", "./assets")
 	router.GET("/reset", c.handleReset)
 	router.NoRoute(c.handleProxy)
 
