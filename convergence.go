@@ -8,7 +8,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/gin-gonic/gin"
+	"github.com/pressly/chi"
+	"github.com/unrolled/render"
 )
 
 var linkRegex = regexp.MustCompile(`"/wiki/pages/viewpage\.action\?pageId=(\d+)"`)
@@ -16,45 +17,52 @@ var linkRegex = regexp.MustCompile(`"/wiki/pages/viewpage\.action\?pageId=(\d+)"
 type Convergence struct {
 	confluence *Confluence
 	proxy      http.Handler
+	router     *chi.Mux
+	render     *render.Render
 }
 
 func NewConvergence(confluence *Confluence) *Convergence {
 	return &Convergence{
 		confluence: confluence,
 		proxy:      confluence.Proxy(),
+		router:     chi.NewRouter(),
+		render:     render.New(render.Options{
+			Extensions: []string{".html"},
+			Layout: "layout",
+		}),
 	}
 }
 
-func (c *Convergence) Run() error {
-	router := gin.Default()
-	router.LoadHTMLGlob("templates/*")
+func (c *Convergence) Run() {
+	c.router.Use(c.proxyMiddleware)
 
-	router.GET("/", c.viewRoot)
-	router.GET("/page/:key", c.viewSpace)
-	router.GET("/page/:key/:title", c.viewPage)
-	router.Static("/assets", "./assets")
-	router.GET("/reset", c.handleReset)
-	router.NoRoute(c.handleProxy)
+	c.router.Get("/", c.viewRoot)
+	c.router.Get("/:key", c.viewSpace)
+	c.router.Get("/:key/:title", c.viewPage)
+	c.router.Get("/reset", c.handleReset)
+	c.router.FileServer("/assets", http.Dir("./assets"))
 
-	return router.Run()
+	c.router.NotFound(c.handleNotFound)
+
+	http.ListenAndServe(":3333", c.router)
 }
 
-func (c *Convergence) viewRoot(ctx *gin.Context) {
-	ctx.HTML(http.StatusOK, "index.html", gin.H{
+func (c *Convergence) viewRoot(w http.ResponseWriter, r *http.Request) {
+	c.render.HTML(w, http.StatusOK, "index", map[string]interface{}{
 		"Title": "IAD Wiki",
 	})
 }
 
-func (c *Convergence) viewSpace(ctx *gin.Context) {
-	key := ctx.Param("key")
+func (c *Convergence) viewSpace(w http.ResponseWriter, r *http.Request) {
+	key := chi.URLParam(r, "key")
 
 	space, err := c.confluence.GetSpace(key)
 	if err != nil {
-		c.showError(ctx, err)
+		c.showError(w, err)
 		return
 	}
 
-	ctx.HTML(http.StatusOK, "page.html", gin.H{
+	c.render.HTML(w, http.StatusOK, "page", map[string]interface{}{
 		"Title": space.Name,
 		"Body":  c.processBody(space.Homepage.Body, key),
 		"Index": key,
@@ -62,23 +70,23 @@ func (c *Convergence) viewSpace(ctx *gin.Context) {
 	})
 }
 
-func (c *Convergence) viewPage(ctx *gin.Context) {
-	key := ctx.Param("key")
-	title := ctx.Param("title")
+func (c *Convergence) viewPage(w http.ResponseWriter, r *http.Request) {
+	key := chi.URLParam(r, "key")
+	title := chi.URLParam(r, "title")
 
 	var err error
 	var page *Page
 
 	space, err := c.confluence.GetSpace(key)
 	if err != nil {
-		c.showError(ctx, err)
+		c.showError(w, err)
 		return
 	}
 
 	if _, err := strconv.Atoi(title); err == nil {
 		page, err = c.confluence.GetPageByID(key, title)
 		if err != nil {
-			c.showError(ctx, err)
+			c.showError(w, err)
 			return
 		}
 	}
@@ -86,12 +94,12 @@ func (c *Convergence) viewPage(ctx *gin.Context) {
 	if page == nil {
 		page, err = c.confluence.GetPageByTitle(key, title)
 		if err != nil {
-			c.showError(ctx, err)
+			c.showError(w, err)
 			return
 		}
 	}
 
-	ctx.HTML(http.StatusOK, "page.html", gin.H{
+	c.render.HTML(w, http.StatusOK, "page", map[string]interface{}{
 		"Title": page.Title,
 		"Body":  c.processBody(page.Body, key),
 		"Index": key,
@@ -99,52 +107,58 @@ func (c *Convergence) viewPage(ctx *gin.Context) {
 	})
 }
 
-func (c *Convergence) handleReset(ctx *gin.Context) {
+func (c *Convergence) handleReset(w http.ResponseWriter, r *http.Request) {
 	c.confluence.Reset()
 
-	referrer := ctx.Request.Referer()
+	referrer := r.Referer()
 	if len(referrer) <= 0 {
 		referrer = "/"
 	}
 
-	ctx.Redirect(http.StatusTemporaryRedirect, referrer)
+	http.Redirect(w, r, referrer, http.StatusTemporaryRedirect)
 }
 
-func (c *Convergence) handleProxy(ctx *gin.Context) {
-	// proxy request if begins with /wiki
-	if strings.HasPrefix(ctx.Request.URL.Path, "/wiki") {
-		c.proxy.ServeHTTP(ctx.Writer, ctx.Request)
-		return
-	}
+func (c *Convergence) handleNotFound(w http.ResponseWriter, r *http.Request) {
+	c.showNotFound(w)
+}
 
-	c.showNotFound(ctx)
+func (c *Convergence) proxyMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+		// proxy request if begins with /wiki
+		if strings.HasPrefix(r.URL.Path, "/wiki") {
+			c.proxy.ServeHTTP(w, r)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (c *Convergence) processBody(body string, key string) template.HTML {
-	body = strings.Replace(body, "/wiki/display/", "/page/", -1)
+	body = strings.Replace(body, "/wiki/display/", "/", -1)
 
 	for _, match := range linkRegex.FindAllStringSubmatch(body, -1) {
-		body = strings.Replace(body, match[0], `"/page/`+key+`/`+match[1]+`"`, 1)
+		body = strings.Replace(body, match[0], `"/`+key+`/`+match[1]+`"`, 1)
 	}
 
 	return template.HTML(body)
 }
 
-func (c *Convergence) showError(ctx *gin.Context, err error) {
+func (c *Convergence) showError(w http.ResponseWriter, err error) {
 	fmt.Printf("Error: %s\n", err.Error())
 
 	if err == ErrNotFound {
-		c.showNotFound(ctx)
+		c.showNotFound(w)
 		return
 	}
 
-	ctx.HTML(http.StatusInternalServerError, "503.html", gin.H{
+	c.render.HTML(w, http.StatusInternalServerError, "503", map[string]interface{}{
 		"Title": "Internal Server Error",
 	})
 }
 
-func (c *Convergence) showNotFound(ctx *gin.Context) {
-	ctx.HTML(http.StatusNotFound, "404.html", gin.H{
+func (c *Convergence) showNotFound(w http.ResponseWriter) {
+	c.render.HTML(w, http.StatusNotFound, "404", map[string]interface{}{
 		"Title": "Not Found",
 	})
 }

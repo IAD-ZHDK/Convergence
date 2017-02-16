@@ -2,10 +2,11 @@ package: github.com/IAD-ZHDK/Convergence
 import:
 - package: github.com/Jeffail/gabs
   version: ^1.0.0
-- package: github.com/gin-gonic/gin
-  version: ^1.1.4
 - package: github.com/parnurzeal/gorequest
   version: ^0.2.14
 - package: github.com/patrickmn/go-cache
   version: ^2.0.0
 - package: github.com/microcosm-cc/bluemonday
+- package: github.com/pressly/chi
+  version: ^2.0.0
+- package: github.com/unrolled/render

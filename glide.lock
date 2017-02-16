@@ -1,21 +1,8 @@
-hash: d37d28dc7b0a4dd009923bc8c39e3fb619c3a9898fca0d8aae912f061bb30be4
-updated: 2017-02-13T18:41:25.209483632+01:00
+hash: 4099dc5aaaaf5044c3f1f9021f6f11733a3e8088f1b5e04b6a443b8b81bc2a63
+updated: 2017-02-16T10:33:40.761085873+01:00
 imports:
-- name: github.com/gin-gonic/gin
-  version: e2212d40c62a98b388a5eb48ecbdcf88534688ba
-  subpackages:
-  - binding
-  - render
-- name: github.com/golang/protobuf
-  version: 2402d76f3d41f928c7902a765dfc872356dd3aad
-  subpackages:
-  - proto
 - name: github.com/Jeffail/gabs
   version: 2a3aa15961d5fee6047b8151b67ac2f08ba2c48c
-- name: github.com/manucorporat/sse
-  version: ee05b128a739a0fb76c7ebd3ae4810c1de808d6d
-- name: github.com/mattn/go-isatty
-  version: ae0b1f8f8004be68d791a576e3d8e7648ab41449
 - name: github.com/microcosm-cc/bluemonday
   version: e79763773ab6222ca1d5a7cbd9d62d83c1f77081
 - name: github.com/moul/http2curl
@@ -24,15 +11,14 @@ imports:
   version: 2aea80ce763523ecc6452e61c3727ae9595a5809
 - name: github.com/patrickmn/go-cache
   version: 1881a9bccb818787f68c52bfba648c6cf34c34fa
+- name: github.com/pressly/chi
+  version: 54f435d539226571eab1987ed862b1c0fdfdc892
+- name: github.com/unrolled/render
+  version: 50716a0a853771bb36bfce61a45cdefdb98c2e6e
 - name: golang.org/x/net
   version: f315505cf3349909cdf013ea56690da34e96a451
   subpackages:
-  - context
   - html
   - html/atom
   - publicsuffix
-- name: gopkg.in/go-playground/validator.v8
-  version: c193cecd124b5cc722d7ee5538e945bdb3348435
-- name: gopkg.in/yaml.v2
-  version: a3f3340b5840cee44f372bddb5880fcbc419b46a
 testImports: []

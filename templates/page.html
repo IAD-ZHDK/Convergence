@@ -1,11 +1,7 @@
-{{template "_header.html" .}}
-
 <div class="cv-nav">
-  <a href="/">Interaction Design Wiki</a> ･ <a href="/page/{{.Index}}">{{.Space}}</a>
+  <a href="/">Interaction Design Wiki</a> ･ <a href="/{{.Index}}">{{.Space}}</a>
 </div>
 
 <h1 class="cv-title">{{.Title}}</h1>
 
 {{.Body}}
-
-{{template "_footer.html" .}}

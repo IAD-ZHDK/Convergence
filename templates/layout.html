@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=0">
+  <title>{{.Title}}</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.3/normalize.min.css" media="screen" charset="utf-8">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.1.0/styles/github.min.css" media="screen,print" charset="utf-8">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro|Source+Sans+Pro:400,600" media="screen,print" charset="utf-8">
+  <link rel="stylesheet" href="/assets/style2.css" media="screen,print" charset="utf-8">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.1.0/highlight.min.js"></script>
+  <script>
+      $(document).ready(function() {
+          $('.codeContent pre').each(function(i, block) {
+              hljs.highlightBlock(block);
+          });
+      });
+  </script>
+</head>
+<body>
+<div class="cv-page">
+  {{yield}}
+
+  <div class="cv-footer">© <a href="http://iad.zhdk.ch">Interaction Design</a> ･ <a href="http://www.zhdk.ch">ZHdK</a> <a class="cv-reset" href="/reset">Refresh</a></div>
+</div>
+</body>
+</html>
