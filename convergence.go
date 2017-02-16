@@ -12,8 +12,6 @@ import (
 	"github.com/unrolled/render"
 )
 
-var linkRegex = regexp.MustCompile(`"/wiki/pages/viewpage\.action\?pageId=(\d+)"`)
-
 type Convergence struct {
 	confluence *Confluence
 	proxy      http.Handler
@@ -152,6 +150,8 @@ func (c *Convergence) showNotFound(w http.ResponseWriter) {
 		"Title": "Not Found",
 	})
 }
+
+var linkRegex = regexp.MustCompile(`"/wiki/pages/viewpage\.action\?pageId=(\d+)"`)
 
 func (c *Convergence) processBody(body string, key string) template.HTML {
 	body = strings.Replace(body, "/wiki/display/", "/", -1)
