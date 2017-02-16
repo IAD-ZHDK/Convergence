@@ -26,9 +26,9 @@ func NewConvergence(confluence *Confluence) *Convergence {
 		confluence: confluence,
 		proxy:      confluence.Proxy(),
 		router:     chi.NewRouter(),
-		render:     render.New(render.Options{
+		render: render.New(render.Options{
 			Extensions: []string{".html"},
-			Layout: "layout",
+			Layout:     "layout",
 		}),
 	}
 }
@@ -123,7 +123,7 @@ func (c *Convergence) handleNotFound(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Convergence) proxyMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request){
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// proxy request if begins with /wiki
 		if strings.HasPrefix(r.URL.Path, "/wiki") {
 			c.proxy.ServeHTTP(w, r)
