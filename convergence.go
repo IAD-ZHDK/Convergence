@@ -134,16 +134,6 @@ func (c *Convergence) proxyMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func (c *Convergence) processBody(body string, key string) template.HTML {
-	body = strings.Replace(body, "/wiki/display/", "/", -1)
-
-	for _, match := range linkRegex.FindAllStringSubmatch(body, -1) {
-		body = strings.Replace(body, match[0], `"/`+key+`/`+match[1]+`"`, 1)
-	}
-
-	return template.HTML(body)
-}
-
 func (c *Convergence) showError(w http.ResponseWriter, err error) {
 	fmt.Printf("Error: %s\n", err.Error())
 
@@ -161,4 +151,14 @@ func (c *Convergence) showNotFound(w http.ResponseWriter) {
 	c.render.HTML(w, http.StatusNotFound, "404", map[string]interface{}{
 		"Title": "Not Found",
 	})
+}
+
+func (c *Convergence) processBody(body string, key string) template.HTML {
+	body = strings.Replace(body, "/wiki/display/", "/", -1)
+
+	for _, match := range linkRegex.FindAllStringSubmatch(body, -1) {
+		body = strings.Replace(body, match[0], `"/`+key+`/`+match[1]+`"`, 1)
+	}
+
+	return template.HTML(body)
 }
