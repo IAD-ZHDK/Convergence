@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -42,7 +43,7 @@ func (c *Convergence) Run() {
 
 	c.router.NotFound(c.handleNotFound)
 
-	http.ListenAndServe(":3333", c.router)
+	http.ListenAndServe(":"+os.Getenv("PORT"), c.router)
 }
 
 func (c *Convergence) viewRoot(w http.ResponseWriter, r *http.Request) {
