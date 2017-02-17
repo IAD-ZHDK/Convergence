@@ -166,8 +166,28 @@ h3.cv-category.cv-margin {
     overflow: scroll;
 }
 
-.expand-control {
-    display: none;
+.code {
+    background-color: #f8f8f8;
+    margin: 1em 0;
+}
+
+.code pre {
+    margin: 0;
+}
+
+.code .codeHeader {
+    background-color: #e8e8e8;
+    padding: 0.5em 1em;
+    cursor: pointer;
+}
+
+.code .codeHeader .expand-control {
+    float: right;
+    color: #999;
+}
+
+.code .codeContent pre {
+    padding: 1em;
 }
 
 /* Mobile Overrides */
