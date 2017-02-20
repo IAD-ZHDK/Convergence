@@ -57,6 +57,10 @@ table {
     font-size: 14px;
 }
 
+table pre, table code {
+    font-size: 14px;
+}
+
 table td, table th {
     padding: 8px;
     border: 1px solid #eee;
