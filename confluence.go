@@ -47,7 +47,7 @@ type Confluence struct {
 
 func NewConfluence(baseURL, username, password string) *Confluence {
 	c := &Confluence{
-		baseURL:   baseURL,
+		baseURL:   strings.TrimSuffix(baseURL, "/"),
 		username:  username,
 		password:  password,
 		client:    gorequest.New(),
@@ -64,7 +64,7 @@ func NewConfluence(baseURL, username, password string) *Confluence {
 }
 
 func (c *Confluence) url(path string) string {
-	return c.baseURL + "wiki/rest/api/" + path
+	return c.baseURL + "/wiki/rest/api/" + path
 }
 
 func (c *Confluence) GetSpaces() ([]*Space, error) {
@@ -300,5 +300,5 @@ func (c *Confluence) Reset() {
 
 func (c *Confluence) processBody(body string) string {
 	body = c.sanitizer.Sanitize(body)
-	return strings.Replace(body, c.baseURL, "/", -1)
+	return strings.Replace(body, c.baseURL+"/", "/", -1)
 }

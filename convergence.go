@@ -14,7 +14,7 @@ import (
 )
 
 type Convergence struct {
-	HomeSpaceKey string
+	HomeSpaceKey  string
 	HomePageTitle string
 
 	confluence *Confluence
@@ -25,7 +25,7 @@ type Convergence struct {
 
 func NewConvergence(confluence *Confluence, homeSpaceKey, homePageTitle string) *Convergence {
 	return &Convergence{
-		HomeSpaceKey: homeSpaceKey,
+		HomeSpaceKey:  homeSpaceKey,
 		HomePageTitle: homePageTitle,
 
 		confluence: confluence,
