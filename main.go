@@ -9,7 +9,11 @@ func main() {
 		os.Getenv("PASSWORD"),
 	)
 
-	convergence := NewConvergence(confluence)
+	convergence := NewConvergence(
+		confluence,
+		os.Getenv("HOME_SPACE_KEY"),
+		os.Getenv("HOME_PAGE_TITLE"),
+	)
 
 	convergence.Run()
 }

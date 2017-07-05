@@ -104,47 +104,8 @@ table th p {
     text-decoration: underline;
 }
 
-.cv-row {
-    overflow: hidden;
-}
-
-.cv-block {
-    float: left;
-    width: 33.333%;
-}
-
-.cv-block ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.cv-block a {
-    text-decoration: none;
-}
-
-.cv-block a:hover {
-    text-decoration: underline;
-}
-
-.cv-missing {
-    color: #bbb;
-}
-
 h1.cv-title {
     font-size: 2em;
-}
-
-h3.cv-category {
-    font-size: 0.75em;
-    margin: 0;
-    font-weight: normal;
-    color: #bbb;
-    height: 27px;
-}
-
-h3.cv-category.cv-margin {
-    margin-top: 27px;
 }
 
 .cv-footer {
@@ -192,6 +153,36 @@ h3.cv-category.cv-margin {
 
 .code .codeContent pre {
     padding: 1em;
+}
+
+/* Index */
+
+.cv-index .columnLayout {
+    overflow: hidden;
+}
+
+.cv-index .columnLayout.three-equal .cell {
+    float: left;
+    width: 33.333%;
+}
+
+.cv-index .columnLayout.three-equal .cell h2 {
+    font-size: 0.75em;
+    margin: 0;
+    margin-top: 27px;
+    font-weight: normal;
+    color: #bbb;
+    height: 27px;
+}
+
+.cv-index .columnLayout.three-equal .cell h2:first-child {
+    margin-top: 0;
+}
+
+.cv-index .columnLayout .cell ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
 
 /* Mobile Overrides */

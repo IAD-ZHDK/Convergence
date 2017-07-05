@@ -14,14 +14,20 @@ import (
 )
 
 type Convergence struct {
+	HomeSpaceKey string
+	HomePageTitle string
+
 	confluence *Confluence
 	proxy      http.Handler
 	router     *chi.Mux
 	render     *render.Render
 }
 
-func NewConvergence(confluence *Confluence) *Convergence {
+func NewConvergence(confluence *Confluence, homeSpaceKey, homePageTitle string) *Convergence {
 	return &Convergence{
+		HomeSpaceKey: homeSpaceKey,
+		HomePageTitle: homePageTitle,
+
 		confluence: confluence,
 		proxy:      confluence.Proxy(),
 		router:     chi.NewRouter(),
@@ -47,8 +53,28 @@ func (c *Convergence) Run() {
 }
 
 func (c *Convergence) viewRoot(w http.ResponseWriter, r *http.Request) {
+	var err error
+	var page *Page
+
+	if _, err := strconv.Atoi(c.HomePageTitle); err == nil {
+		page, err = c.confluence.GetPageByID(c.HomeSpaceKey, c.HomePageTitle)
+		if err != nil {
+			c.showError(w, err)
+			return
+		}
+	}
+
+	if page == nil {
+		page, err = c.confluence.GetPageByTitle(c.HomeSpaceKey, c.HomePageTitle)
+		if err != nil {
+			c.showError(w, err)
+			return
+		}
+	}
+
 	c.render.HTML(w, http.StatusOK, "index", map[string]interface{}{
-		"Title": "IAD Wiki",
+		"Title": page.Title,
+		"Body":  c.processBody(page.Body, c.HomeSpaceKey),
 	})
 }
 
@@ -156,6 +182,7 @@ var linkRegex = regexp.MustCompile(`"/wiki/pages/viewpage\.action\?pageId=(\d+)"
 
 func (c *Convergence) processBody(body string, key string) template.HTML {
 	body = strings.Replace(body, "/wiki/display/", "/", -1)
+	body = strings.Replace(body, "/wiki/spaces/", "/", -1)
 
 	for _, match := range linkRegex.FindAllStringSubmatch(body, -1) {
 		body = strings.Replace(body, match[0], `"/`+key+`/`+match[1]+`"`, 1)
