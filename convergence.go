@@ -169,7 +169,7 @@ func (c *Convergence) showNotFound(w http.ResponseWriter) {
 	})
 }
 
-var linkRegex = regexp.MustCompile(`"/wiki/spaces/([A-z]+)/pages/([0-9]+)/(\S*)"`)
+var linkRegex = regexp.MustCompile(`"/wiki/spaces/([A-z0-9]+)/pages/([0-9]+)/?(\S*)"`)
 
 func (c *Convergence) processBody(body string, key string) template.HTML {
 	for _, match := range linkRegex.FindAllStringSubmatch(body, -1) {
