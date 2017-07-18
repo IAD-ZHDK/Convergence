@@ -43,7 +43,7 @@ func (c *Convergence) Run() {
 
 	c.router.Get("/", c.viewRoot)
 	c.router.Get("/:key", c.viewSpace)
-	c.router.Get("/:key/:title", c.viewPage)
+	c.router.Get("/:key/:id/:title", c.viewPage)
 	c.router.Get("/reset", c.handleReset)
 	c.router.FileServer("/assets", http.Dir("./assets"))
 
@@ -97,7 +97,8 @@ func (c *Convergence) viewSpace(w http.ResponseWriter, r *http.Request) {
 
 func (c *Convergence) viewPage(w http.ResponseWriter, r *http.Request) {
 	key := chi.URLParam(r, "key")
-	title := chi.URLParam(r, "title")
+	id := chi.URLParam(r, "id")
+	//title := chi.URLParam(r, "title")
 
 	var err error
 	var page *Page
@@ -108,20 +109,10 @@ func (c *Convergence) viewPage(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if _, err := strconv.Atoi(title); err == nil {
-		page, err = c.confluence.GetPageByID(key, title)
-		if err != nil {
-			c.showError(w, err)
-			return
-		}
-	}
-
-	if page == nil {
-		page, err = c.confluence.GetPageByTitle(key, title)
-		if err != nil {
-			c.showError(w, err)
-			return
-		}
+	page, err = c.confluence.GetPageByID(key, id)
+	if err != nil {
+		c.showError(w, err)
+		return
 	}
 
 	c.render.HTML(w, http.StatusOK, "page", map[string]interface{}{
@@ -178,15 +169,15 @@ func (c *Convergence) showNotFound(w http.ResponseWriter) {
 	})
 }
 
-var linkRegex = regexp.MustCompile(`"/wiki/pages/viewpage\.action\?pageId=(\d+)"`)
+var linkRegex = regexp.MustCompile(`"/wiki/spaces/([A-z]+)/pages/([0-9]+)/(\S*)"`)
 
 func (c *Convergence) processBody(body string, key string) template.HTML {
+	for _, match := range linkRegex.FindAllStringSubmatch(body, -1) {
+		body = strings.Replace(body, match[0], `"/`+key+`/`+match[2]+`/`+match[3]+`"`, 1)
+	}
+
 	body = strings.Replace(body, "/wiki/display/", "/", -1)
 	body = strings.Replace(body, "/wiki/spaces/", "/", -1)
-
-	for _, match := range linkRegex.FindAllStringSubmatch(body, -1) {
-		body = strings.Replace(body, match[0], `"/`+key+`/`+match[1]+`"`, 1)
-	}
 
 	return template.HTML(body)
 }
