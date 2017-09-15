@@ -77,6 +77,7 @@ func (c *Confluence) GetSpaces() ([]*Space, error) {
 	_, res, errs := c.client.Get(c.url("space")).
 		Set("Accept", "application/json, */*").
 		Query("expand=description.view,homepage.body.view").
+		Query("limit=256").
 		SetBasicAuth(c.username, c.password).
 		End()
 
