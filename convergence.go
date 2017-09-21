@@ -60,7 +60,7 @@ func (c *Convergence) viewRoot(w http.ResponseWriter, r *http.Request) {
 	if _, err := strconv.Atoi(c.HomePageTitle); err == nil {
 		page, err = c.confluence.GetPageByID(c.HomeSpaceKey, c.HomePageTitle)
 		if err != nil {
-			c.showError(w, err)
+			c.showError(w, r, err)
 			return
 		}
 	}
@@ -68,7 +68,7 @@ func (c *Convergence) viewRoot(w http.ResponseWriter, r *http.Request) {
 	if page == nil {
 		page, err = c.confluence.GetPageByTitle(c.HomeSpaceKey, c.HomePageTitle)
 		if err != nil {
-			c.showError(w, err)
+			c.showError(w, r, err)
 			return
 		}
 	}
@@ -84,7 +84,7 @@ func (c *Convergence) viewSpace(w http.ResponseWriter, r *http.Request) {
 
 	space, err := c.confluence.GetSpace(key)
 	if err != nil {
-		c.showError(w, err)
+		c.showError(w, r, err)
 		return
 	}
 
@@ -106,13 +106,13 @@ func (c *Convergence) viewPage(w http.ResponseWriter, r *http.Request) {
 
 	space, err := c.confluence.GetSpace(key)
 	if err != nil {
-		c.showError(w, err)
+		c.showError(w, r, err)
 		return
 	}
 
 	page, err = c.confluence.GetPageByID(key, id)
 	if err != nil {
-		c.showError(w, err)
+		c.showError(w, r, err)
 		return
 	}
 
@@ -136,7 +136,7 @@ func (c *Convergence) handleReset(w http.ResponseWriter, r *http.Request) {
 }
 
 func (c *Convergence) handleNotFound(w http.ResponseWriter, r *http.Request) {
-	c.showNotFound(w)
+	c.showError(w, r, ErrNotFound)
 }
 
 func (c *Convergence) proxyMiddleware(next http.Handler) http.Handler {
@@ -151,22 +151,21 @@ func (c *Convergence) proxyMiddleware(next http.Handler) http.Handler {
 	})
 }
 
-func (c *Convergence) showError(w http.ResponseWriter, err error) {
-	fmt.Printf("Error: %s\n", err.Error())
-
+func (c *Convergence) showError(w http.ResponseWriter, r *http.Request, err error) {
+	// check if not found
 	if err == ErrNotFound {
-		c.showNotFound(w)
+		fmt.Printf("Not Found: %s\n", r.URL.String())
+		c.render.HTML(w, http.StatusNotFound, "404", map[string]interface{}{
+			"Title": "Not Found",
+		})
+
 		return
 	}
 
+	// internal server error
+	fmt.Printf("Internal Error: %s\n", err.Error())
 	c.render.HTML(w, http.StatusInternalServerError, "503", map[string]interface{}{
 		"Title": "Internal Server Error",
-	})
-}
-
-func (c *Convergence) showNotFound(w http.ResponseWriter) {
-	c.render.HTML(w, http.StatusNotFound, "404", map[string]interface{}{
-		"Title": "Not Found",
 	})
 }
 
