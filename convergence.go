@@ -49,6 +49,7 @@ func (c *Convergence) Run() {
 
 	c.router.NotFound(c.handleNotFound)
 
+	fmt.Printf("Running on 0.0.0.0:%s...\n", os.Getenv("PORT"))
 	http.ListenAndServe(":"+os.Getenv("PORT"), c.router)
 }
 
