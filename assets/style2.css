@@ -161,6 +161,10 @@ h1.cv-title {
     overflow: hidden;
 }
 
+.cv-index .columnLayout h1 {
+    margin-bottom: 0;
+}
+
 .cv-index .columnLayout.three-equal .cell {
     float: left;
     width: 33.333%;
@@ -173,10 +177,6 @@ h1.cv-title {
     font-weight: normal;
     color: #bbb;
     height: 27px;
-}
-
-.cv-index .columnLayout.three-equal .cell h2:first-child {
-    margin-top: 0;
 }
 
 .cv-index .columnLayout .cell ul {
@@ -207,6 +207,10 @@ h1.cv-title {
 
     .cv-block {
         float: none;
+        width: 100%;
+    }
+
+    .cv-index .columnLayout.three-equal .cell {
         width: 100%;
     }
 

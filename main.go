@@ -15,5 +15,5 @@ func main() {
 		os.Getenv("HOME_PAGE_TITLE"),
 	)
 
-	convergence.Run()
+	convergence.Run(os.Getenv("PORT"))
 }

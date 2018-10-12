@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
-	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -38,7 +37,7 @@ func NewConvergence(confluence *Confluence, homeSpaceKey, homePageTitle string) 
 	}
 }
 
-func (c *Convergence) Run() {
+func (c *Convergence) Run(port string) {
 	c.router.Use(c.proxyMiddleware)
 
 	c.router.Get("/", c.viewRoot)
@@ -49,8 +48,8 @@ func (c *Convergence) Run() {
 
 	c.router.NotFound(c.handleNotFound)
 
-	fmt.Printf("Running on 0.0.0.0:%s...\n", os.Getenv("PORT"))
-	http.ListenAndServe(":"+os.Getenv("PORT"), c.router)
+	fmt.Printf("Running on 0.0.0.0:%s...\n", port)
+	http.ListenAndServe(":"+port, c.router)
 }
 
 func (c *Convergence) viewRoot(w http.ResponseWriter, r *http.Request) {
